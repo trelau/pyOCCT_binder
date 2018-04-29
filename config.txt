@@ -1,0 +1,256 @@
+# OCCT ------------------------------------------------------------------------
+
+# Comments to put at top of modules
++comment ModName: The comment
+
+# Override type Python name
++pname AIS_PointCloud::DisplayMode-->DisplayMode_enum
+
+# Immutable types that should be returned in Python since they cannot be
+# modified in place.
++immutable Standard_Boolean
++immutable Standard_CString
++immutable Standard_Integer
++immutable Standard_Real
+
+# Modules to exclude
+-module ShapePersistent
+-module Rn
+
+# Extra headers
++header BinMXCAFDoc: BinTools_LocationSet.hxx
++header BOPAlgo: BOPDS_Iterator.hxx
++header BRepAlgoAPI: BOPAlgo_Builder.hxx
++header BRepAlgoAPI: Message_ProgressIndicator.hxx
++header BRepApprox: BRepAdaptor_Surface.hxx
++header BRepMesh: Precision.hxx
++header BVH: gp_XY.hxx
++header BVH: gp_XYZ.hxx
++header ChFiKPart: ChFiDS_SurfData.hxx
++header HLRAlgo: gp_XYZ.hxx
++header IntPatch: IntPatch_Polyhedron.hxx
++header NCollection: gp_XYZ.hxx
++header NCollection: gp_XY.hxx
++header PCDM: Standard_IStream.hxx
++header ShapeConstruct: TColStd_HArray1OfReal.hxx
++header TopOpeBRep: TopOpeBRepTool_ShapeClassifier.hxx
++header TopOpeBRepDS: TopOpeBRepTool_ShapeClassifier.hxx
++header XmlMXCAFDoc: TopTools_LocationSet.hxx
+
+# Excluded functions using fully qualified name
+-function BRepMesh_DataStructureOfDelaun::ElementNodes
+-function BRepMesh_GeomTool::IntLinLin_
+-function BRepMesh_Triangle::Edges
+-function BRepMesh_Triangle::Initialize
+-function BOPAlgo_Tools::PerformCommonBlocks_
+-function BVH_PrimitiveSet<T, N>::BVH_PrimitiveSet<T, N>
+-function ChFi3d_SearchPivot
+-function Graphic3d_AspectText3d::Values
+-function IGESData_IGESReaderData::DirValues
+-function Interface_STAT::Description
+-function Interface_STAT::Phase
+-function IntPatch_SpecialPoints::AdjustPointAndVertex_
+-function LDOMBasicString::operator=
+-function LDOMBasicString::operator==
+-function LDOMBasicString::operator!=
+-function MoniTool_TypedValue::Internals
+-function MoniTool_CaseData::Text
+-function MoniTool_AttrList::GetStringAttribute
+-function NCollection_DataMap<TheKeyType, TheItemType, Hasher>::Bound
+-function NCollection_DataMap<TheKeyType, TheItemType, Hasher>::ChangeSeek
+# -function NCollection_DataMap<TheKeyType, TheItemType, Hasher>::Find
+-function NCollection_DataMap<TheKeyType, TheItemType, Hasher>::Seek
+-function NCollection_IndexedDataMap<TheKeyType, TheItemType, Hasher>::ChangeSeek
+-function NCollection_IndexedDataMap<TheKeyType, TheItemType, Hasher>::Seek
+-function NCollection_IndexedMap<TheKeyType, Hasher>::Substitute
+-function NCollection_Vec2<Element_t>::cwiseAbs
+-function NCollection_Vec3<Element_t>::cwiseAbs
+-function NCollection_Vec4<Element_t>::cwiseAbs
+-function OSD::RealToCString_
+-function PCDM::FileDriverType_
+-function Resource_Unicode::ConvertUnicodeToSJIS_
+-function Resource_Unicode::ConvertUnicodeToEUC_
+-function Resource_Unicode::ConvertUnicodeToGB_
+-function Resource_Unicode::ConvertUnicodeToANSI_
+-function Resource_Unicode::ConvertUnicodeToFormat_
+-function Standard_Failure::Caught
+-function Standard_MMgrOpt::SetCallBackFunction
+-function Standard_Atomic_Increment
+-function Standard_Atomic_Decrement
+-function Standard_Failure::operator=
+-function StdMeshers_Sweeper::ComputeNodes
+-function StepData_StepReaderData::ReadEnumParam
+-function TCollection_ExtendedString::ToUTF8CString
+-function Transfer_Finder::GetStringAttribute
+-function XmlObjMgt::GetInteger_
+-function XmlObjMgt::GetReal_
+
+# Classes to exclude using fully qualified name
+-class AIS_ManipulatorObjectSequence
+-class BRepBuilderAPI_CellFilter
+-class BRepExtrema_TriangleSet
+-class BVH_EncodedLink
+-class Cocoa_Window
+-class Font_BRepFont
+-class Font_FTLibrary
+-class FSD_FStream
+-class Graphic3d_SequenceOfHClipPlane
+-class gp_TrsfNLerp
+-class IntWalk_VectorOfWalkingData
+-class IntWalk_VectorOfInteger
+-class IntPolyh_ArrayOfEdges
+-class IntPolyh_ArrayOfSectionLines
+-class IntPolyh_ArrayOfPoints
+-class IntPolyh_ArrayOfTriangles
+-class IntPolyh_ArrayOfTangentZones
+-class LDOM_SBuffer
+-class NCollection_Handle<T>
+-class NCollection_Sequence<TheItemType>::Node
+-class NCollection_DataMap<TheKeyType, TheItemType, Hasher>::DataMapNode
+-class NCollection_Map<TheKeyType, Hasher>::MapNode
+-class NCollection_ListNode
+-class NCollection_SeqNode
+-class NCollection_Shared<typename T, type-parameter-0-1 >
+-class OpenGl_BVHClipPrimitiveSet
+-class OpenGl_BVHClipPrimitiveTrsfPersSet
+-class OpenGl_ListOfStructure
+-class OpenGl_RaytraceGeometry
+-class OpenGl_TriangleSet
+-class Poly_CoherentTriPtr
+-class SelectMgr_SensitiveEntitySet
+-class SelectMgr_RectangularFrustum
+-class SelectMgr_TriangularFrustum
+-class Standard_ArrayStreamBuffer
+-class Standard_IStream
+-class Standard_OStream
+-class Standard_SStream
+-class StdLPersistent_Function
+-class StdLPersistent_HArray1OfPersistent
+-class StdLPersistent_HArray2OfPersistent
+-class StdLPersistent_NamedData
+-class StdLPersistent_Real
+-class StdLPersistent_Variable
+-class StdLPersistent_XLink
+-class StdPersistent_TopLoc
+-class StdPersistent_DataXtd_Constraint
+-class StdPersistent_DataXtd_PatternStd
+-class StdPersistent_HArray1OfShape1
+-class StdObjMgt_MapOfInstantiators
+-class TDF_LabelNode
+-class TNaming_RefShape
+-class TopOpeBRepTool_IndexedDataMapOfSolidClassifier
+-class XCAFDoc_AssemblyItemId
+-class XSControl_Vars
+
+# Priority when sorting binders and building aliases
++sort TopoDS: 0
++sort TopTools: 1
+
+# Import guards to resolve circular imports
++iguard Font: Graphic3d
++iguard LDOMString: LDOM
++iguard LDOMBasicString: LDOM
++iguard SelectBasics: Select3D
++iguard StepRepr: StepShape
+
+# Call guards to avoid circular imports
++cguard Font_BRepTextBuilder::Perform-->Graphic3d
++cguard Font_FTFont::BoundingBox-->Graphic3d
++cguard Font_TextFormatter::SetupAlignment-->Graphic3d
++cguard LDOMString::getOwnerDocument-->LDOM
++cguard LDOMBasicString::LDOMBasicString-->LDOM
++cguard SelectBasics_SensitiveEntity::BoundingBox-->Select3D
++cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI::Init-->StepShape
++cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI::SetQualifiedRepresentationItem-->StepShape
++cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI::GetQualifiedRepresentationItem-->StepShape
+
+# SMESH -----------------------------------------------------------------------
+
++header BLSURFPlugin: SMESH_subMesh.hxx
++header SMESH: SMESH_ControlsDef.hxx
+
+-function BLSURFPlugin_BLSURF::SetParameters
+-function NETGENPlugin_Mesher::SetLocalSize_
+-function NETGENPlugin_Mesher::PrepareOCCgeometry_
+-function NETGENPlugin_Mesher::RestrictLocalSize_
+-function NETGENPlugin_Mesher::FillSMesh_
+-function NETGENPlugin_Mesher::FillNgMesh
+-function NETGENPlugin_Mesher::FixIntFaces_
+-function NETGENPlugin_Mesher::FixFaceMesh_
+-function NETGENPlugin_Mesher::AddIntVerticesInFaces_
+-function NETGENPlugin_Mesher::AddIntVerticesInSolids_
+-function NETGENPlugin_Mesher::AddSegmentsToMesh_
+-function NETGENPlugin_Mesher::toPython_
+-function NETGENPlugin_NetgenLibWrapper::setMesh
+-function SMDS_Mesh::ChangeElementNodes
+-function SMDS_MeshCell::ChangeNodes
+-function SMDS_MeshCell::SMDS_MeshCell
+-function SMDS_MeshCell::vtkOrder
+-function SMDS_VolumeTool::GetNodes
+-function SMDS_VolumeTool::GetFaceNodes
+-function SMDS_VtkVolume::vtkOrder
+-function SMESH_MeshEditor::RotationSweep
+-function SMESH_MeshEditor::ExtrusionSweep
+-function SMESHDS_Mesh::ChangeElementNodes
+-function StdMeshers_FaceSide::New_
+
+-class DownIdCompare
+-class ItTLinkNode
+-class ListElemByNodesType
+-class NLink
+-class LongType
+-class MapShapeNbElemsItr
+-class NETGENPlugin_ngMeshInfo
+-class PShapeIteratorPtr
+-class ShortType
+-class SMDS_0DElementIteratorPtr
+-class SMDS_CellLinks
+-class SMDS_ElementArrayIterator
+-class SMDS_ElementVectorIterator
+-class SMDS_EdgeIteratorPtr
+-class SMDS_ElemIteratorPtr
+-class SMDS_FaceIteratorPtr
+-class SMDS_NodeArrayElemIterator
+-class SMDS_NodeArrayIterator
+-class SMDS_NodeIteratorPtr
+-class SMDS_NodeVectorElemIterator
+-class SMDS_NodeVectorIterator
+-class SMDS_UnstructuredGrid
+-class SMDS_VolumeIteratorPtr
+-class SMESH_Comment
+-class SMESH_ComputeErrorPtr
+-class SMESH_Octree
+-class SMESH_OctreeNode
+-class SMESH_OctreeNodeIteratorPtr
+-class SMESH_PredicatePtr
+-class SMESH_Quadtree
+-class SMESH_SequenceOfElemPtr
+-class SMESH_subMeshIteratorPtr
+-class SMESHDS_SubMeshIteratorPtr
+-class StdMeshers_FaceSidePtr
+-class StdMeshers_IJNodeMap
+-class TBlockShapes
+-class TError
+-class TFaceQuadStructPtr
+-class TIDCompare
+-class TIDTypeCompare
+-class TNodeColumn
+-class TParam2ColumnIt
+-class TParam2ColumnMap
+
++iguard SMESHDS: SMESH
+
++cguard SMESHDS_GroupOnFilter::SMESHDS_GroupOnFilter-->SMESH
++cguard SMESHDS_GroupOnFilter::SetPredicate-->SMESH
++cguard SMESHDS_GroupOnFilter::GetPredicate-->SMESH
+
++nodelete SMESH_Gen
++nodelete SMESH_Mesh
++nodelete SMESH_subMesh
++nodelete SMESH_Group
++nodelete SMESHDS_GroupBase
++nodelete SMESHDS_Group
++nodelete SMESHDS_GroupOnFilter
++nodelete SMESHDS_GroupOnGeom
++nodelete SMESHDS_SubMesh
++nodelete SMESHDS_Script
