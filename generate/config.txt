@@ -1,0 +1,58 @@
+# Include directories ---------------------------------------------------------
+
+# Clang compiler arguments ----------------------------------------------------
++arg -xc++
++arg -std=c++14
++arg -fms-compatibility-version=19
+
+# Excluded classes ------------------------------------------------------------
+-class Standard_UUID
+
+# Excluded typedefs -----------------------------------------------------------
+-typedef Standard_OStream
+-typedef Standard_SStream
+-typedef Standard_IStream
+-typedef gp_TrsfNLerp
+
+# Excluded functions ----------------------------------------------------------
+-function* operator new_
+-function* operator delete_
+-function* operator new[]_
+-function* operator delete[]_
+-function* operator=
+-function operator<<
+
+# Excluded enums --------------------------------------------------------------
+
+# Extra headers ---------------------------------------------------------------
++header BOPAlgo_Builder: BOPDS_DS.hxx
++header BOPAlgo_Tools: BOPDS_DS.hxx
++header BOPAlgo_PaveFiller: BOPDS_Iterator.hxx
+
++header BRepAlgoAPI_BuilderAlgo: BOPAlgo_Builder.hxx
+
++header BOPDS_DataMapIteratorOfDataMapOfPaveBlockListOfInteger: BOPDS_PaveBlock.hxx
++header BOPDS_ListIteratorOfListOfPaveBlock: BOPDS_PaveBlock.hxx
+
++header gp_Vec: gp_Ax1.hxx
++header gp_Vec: gp_Ax2.hxx
+
++header Graphic3d_ZLayerSetting: Precision.hxx
+
++header NCollection_CellFilter_Action: gp_Pnt.hxx
+
+# Python names ----------------------------------------------------------------
++pname NCollection_Lerp<gp_Trsf>: gp_TrsfNLerp
+
+# nodelete option -------------------------------------------------------------
+
+# Sort order ------------------------------------------------------------------
++sort TopoDS:0
+
+# Import guards to resolve circular imports -----------------------------------
++iguard Standard: Storage
++iguard Standard: NCollection
++iguard Font: Graphic3d
+
+# Excluded base classes -------------------------------------------------------
+-base Standard_ArrayStreamBuffer: std::streambuf
