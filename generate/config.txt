@@ -4,6 +4,7 @@
 +arg -xc++
 +arg -std=c++14
 +arg -fms-compatibility-version=19
++arg -D__CODE_GENERATOR__
 
 # Excluded classes ------------------------------------------------------------
 -class Standard_UUID

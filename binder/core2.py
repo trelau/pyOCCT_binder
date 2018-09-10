@@ -342,16 +342,25 @@ class Generator(object):
 
         :return: None.
         """
+        all_types = defaultdict(set)
         enums = defaultdict(set)
         funcs = defaultdict(set)
+        templates = defaultdict(set)
 
         logger.write('Traversing...\n')
         # Traverse the translation unit and group the binders into modules.
         # Store the binders by their canonical type and name.
         for binder in self.tu_binder.dfs():
-            # Try to handle fwd declarations and dependent types
+            # Skip if it doesn't have a spelling
+            if binder.spelling == '':
+                continue
+            # Get declaration
             binder2 = binder.get_definition()
-            if binder2.is_null:
+            if not binder2.kind.is_declaration():
+                continue
+            # Hack to avoid storing a class template reference as a class
+            # declaration
+            if '<' in binder.display_name and binder2.is_class:
                 continue
             binder = binder2
 
@@ -387,8 +396,11 @@ class Generator(object):
                 if not binder.spelling.startswith('operator'):
                     funcs[binder.qualified_name].add(binder)
                 continue
+            elif binder.is_class_template:
+                templates[binder.qualified_name].add(binder)
+                continue
 
-            # Continue processing class, struct, or class template
+            # Continue processing class, struct, or typedef
 
             # Some binders should be ignored
             spelling = binder.spelling
@@ -406,8 +418,10 @@ class Generator(object):
                 continue
 
             # Add type
-            Generator.all_types[decl].add(binder)
-            logger.write('\tAdding {}.\n'.format(binder.qualified_name))
+            # TODO Support other types
+            if binder.is_class:
+                all_types[decl].add(binder)
+                logger.write('\tAdding {}.\n'.format(binder.qualified_name))
 
         logger.write('done.\n\n')
 
@@ -420,7 +434,7 @@ class Generator(object):
                     continue
                 mod.enums.append(e)
 
-        # Add enum to their modules
+        # Add functions to their module
         for key in funcs:
             func_set = funcs[key]
             for f in func_set:
@@ -430,6 +444,13 @@ class Generator(object):
                 mod.add_binder(key, f)
 
         # TODO More pre-processing on types
+        for key in all_types:
+            type_set = all_types[key]
+            for b in type_set:
+                mod = self.get_module(b.module_name)
+                if mod is None:
+                    continue
+                mod.classes.append(b)
 
     def group_binders(self):
         """
@@ -647,7 +668,7 @@ class Module(object):
 
         :return: None.
         """
-        self.sorted_binders = self.enums + self.funcs
+        self.sorted_binders = self.enums + self.funcs + self.classes
 
         # TODO Sort types
         # binders1 = list(self.classes)
@@ -1140,9 +1161,11 @@ class CursorBinder(object):
         :rtype: bool
         """
         parent = self.parent
-        if parent.is_class or parent.is_class_template:
-            return True
-        return False
+        if parent.is_tu:
+            return False
+        # if parent.is_class or parent.is_class_template:
+        #     return True
+        return True
 
     @property
     def qualified_name(self):
@@ -1415,13 +1438,11 @@ class CursorBinder(object):
         Depth-first walk of all descendants.
 
         :return: List of descendants.
-        :rtype: list(binder.core.CursorBinder)
+        :rtype: Generator(binder.core.CursorBinder)
         """
-        binders = []
         for cursor in self.cursor.walk_preorder():
-            binders.append(CursorBinder(cursor))
-        binders.pop(0)
-        return binders
+            if not cursor.kind.is_translation_unit():
+                yield CursorBinder(cursor)
 
     def build_includes(self):
         """
@@ -1943,7 +1964,7 @@ def generate_function(binder):
     docs = binder.docs
 
     rtype = binder.rtype.spelling
-    _, _, _, signature, _ = function_signature(binder)
+    _, _, _, signature, _, is_array_like = function_signature(binder)
     if signature:
         signature = ', '.join(signature)
     else:
@@ -1966,6 +1987,10 @@ def generate_function(binder):
     src = ['mod.def(\"{}\", {} &{}, \"{}\"{});\n\n'.format(fname, interface,
                                                            qname, docs,
                                                            args)]
+
+    # TODO How to handle arrays
+    if True in is_array_like:
+        src[0] = ' '.join(['//', src[0]])
 
     return src
 
@@ -2083,8 +2108,8 @@ def generate_ctor(binder):
 
     ctors = []
 
-    nargs, ndefaults, args_name, args_type, defaults = function_signature(
-        binder)
+    sig = function_signature(binder)
+    nargs, ndefaults, args_name, args_type, defaults, is_array_like = sig
 
     for i in range(nargs - ndefaults, nargs + 1):
         names = args_name[0:i]
@@ -2127,6 +2152,9 @@ def generate_field(binder):
     src = [
         '{}.def_{}(\"{}\", &{}, \"{}\");\n'.format(prefix, type_, name, qname,
                                                    docs)]
+
+    if binder.type.is_array_like:
+        src[0] = ' '.join(['//', src[0]])
 
     return src
 
@@ -2181,8 +2209,8 @@ def generate_method(binder):
         # if '__i' not in name:
         is_operator = 'py::is_operator(), '
 
-    nargs, ndefaults, args_name, args_type, defaults = function_signature(
-        binder)
+    sig = function_signature(binder)
+    nargs, ndefaults, args_name, args_type, defaults, is_array_like = sig
 
     for i in range(nargs - ndefaults, nargs + 1):
         if i == nargs:
@@ -2237,6 +2265,9 @@ def generate_method(binder):
 
             src = '{}.def{}(\"{}\", []({}) -> {} {{ return {}({}); }});\n'.format(
                 prefix, is_static, fname, signature, rtype, qname_, call)
+
+        if True in is_array_like:
+            src = ' '.join(['//', src])
 
         methods.append(src)
 
@@ -2328,11 +2359,11 @@ def function_signature(binder):
 
     :param binder.core.CursorBinder binder: The binder.
 
-    :return: Number of arguments, number of default values, list of names, list of types, and their
-        default values.
-    :rtype: tuple(int, int, list(str), list(str), list(str))
+    :return: Number of arguments, number of default values, list of names,
+        list of types, their default values, and if their type is array-like.
+    :rtype: tuple(int, int, list(str), list(str), list(str), list(bool))
     """
-    args_name, args_type, defaults = [], [], []
+    args_name, args_type, defaults, is_array = [], [], [], []
     nargs, ndefaults = 0, 0
 
     for arg in binder.parameters:
@@ -2343,5 +2374,9 @@ def function_signature(binder):
         defaults.append(default)
         if default:
             ndefaults += 1
+        if arg.type.is_array_like:
+            is_array.append(True)
+        else:
+            is_array.append(False)
 
-    return nargs, ndefaults, args_name, args_type, defaults
+    return nargs, ndefaults, args_name, args_type, defaults, is_array
