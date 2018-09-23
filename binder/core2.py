@@ -668,7 +668,8 @@ class Module(object):
 
         :return: None.
         """
-        self.sorted_binders = self.enums + self.funcs + self.classes
+        # TODO Add classes to sorted binders
+        self.sorted_binders = self.enums + self.funcs  # + self.classes
 
         # TODO Sort types
         # binders1 = list(self.classes)
