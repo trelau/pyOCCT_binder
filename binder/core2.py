@@ -47,13 +47,13 @@ cymbal.monkeypatch_cursor('get_overloaded_decl',
                           'clang_getOverloadedDecl',
                           [Cursor, c_uint], Cursor)
 
-cymbal.monkeypatch_type('get_num_template_arguments',
-                        'clang_Type_getNumTemplateArguments',
-                        [Type], c_uint)
+# cymbal.monkeypatch_type('get_num_template_arguments',
+#                         'clang_Type_getNumTemplateArguments',
+#                         [Type], c_uint)
 
-cymbal.monkeypatch_type('get_template_argument_type',
-                        'clang_Type_getTemplateArgumentAsType',
-                        [Type, c_uint], Type)
+# cymbal.monkeypatch_type('get_template_argument_type',
+#                         'clang_Type_getTemplateArgumentAsType',
+#                         [Type, c_uint], Type)
 
 logger = open('log.txt', 'w')
 
@@ -668,8 +668,7 @@ class Module(object):
 
         :return: None.
         """
-        # TODO Add classes to sorted binders
-        self.sorted_binders = self.enums + self.funcs  # + self.classes
+        self.sorted_binders = self.enums + self.funcs + self.classes
 
         # TODO Sort types
         # binders1 = list(self.classes)
