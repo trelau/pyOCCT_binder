@@ -27,7 +27,7 @@ from ctypes import c_uint
 
 from binder import cymbal
 from binder.clang.cindex import (AccessSpecifier, Index, TranslationUnit,
-                                 CursorKind, TypeKind, Type, Cursor)
+                                 CursorKind, TypeKind, Cursor)
 from binder.common import src_prefix, available_mods, py_operators
 
 # Patches for libclang
@@ -88,11 +88,11 @@ class Generator(object):
 
     _mods = OrderedDict()
 
-    def __init__(self):
+    def __init__(self, occt_include_dir):
         self._indx = Index.create()
 
         # Primary include directories
-        self._main_includes = ['../include/opencascade']
+        self._main_includes = [occt_include_dir]
 
         # Include directories
         self.include_dirs = []
@@ -108,7 +108,7 @@ class Generator(object):
         self._tu_binder = None
 
         # Build available include files
-        occt_incs = os.listdir('../include/opencascade')
+        occt_incs = os.listdir(occt_include_dir)
         Generator.available_incs = set(occt_incs)
 
     @property
@@ -342,29 +342,14 @@ class Generator(object):
 
         :return: None.
         """
-        all_types = defaultdict(set)
-        enums = defaultdict(set)
-        funcs = defaultdict(set)
-        templates = defaultdict(set)
-
         logger.write('Traversing...\n')
-        # Traverse the translation unit and group the binders into modules.
-        # Store the binders by their canonical type and name.
-        for binder in self.tu_binder.dfs():
-            # Skip if it doesn't have a spelling
-            if binder.spelling == '':
+        # Traverse the translation unit and group the binders into modules
+        for binder in self.tu_binder.get_children():
+            # Only bind definitions
+            if not binder.is_definition:
                 continue
-            # Get declaration
-            binder2 = binder.get_definition()
-            if not binder2.kind.is_declaration():
-                continue
-            # Hack to avoid storing a class template reference as a class
-            # declaration
-            if '<' in binder.display_name and binder2.is_class:
-                continue
-            binder = binder2
 
-            # Bind only these types of declarations
+            # Bind only these types of cursors
             if binder.kind not in [CursorKind.CLASS_DECL,
                                    CursorKind.STRUCT_DECL,
                                    CursorKind.FUNCTION_DECL,
@@ -373,11 +358,11 @@ class Generator(object):
                                    CursorKind.CLASS_TEMPLATE]:
                 continue
 
-            # Do not add if nested in a class
-            if binder.is_nested:
+            # Skip if it's a "Handle_*" definition
+            if binder.spelling.startswith('Handle_'):
                 continue
 
-            # Add binder only if it's in an OCCT header file
+            # Add binder only if it's in an OCCT header file.
             inc = binder.filename
             if inc not in self.available_incs:
                 continue
@@ -387,80 +372,30 @@ class Generator(object):
             if mod_name not in available_mods:
                 continue
 
-            # Add enum or function
+            # Add to module
+            mod = self.get_module(mod_name)
+            if not mod:
+                continue
+
+            qname = binder.qualified_name
             if binder.is_enum:
-                enums[binder.qualified_name].add(binder)
-                continue
+                mod.enums.append(binder)
+                logger.write('\tFound enum: {}\n'.format(qname))
             elif binder.is_function:
-                # Do not bind operator functions
-                if not binder.spelling.startswith('operator'):
-                    funcs[binder.qualified_name].add(binder)
-                continue
+                mod.funcs.append(binder)
+                logger.write('\tFound function: {}\n'.format(qname))
+            elif binder.is_class:
+                mod.classes.append(binder)
+                logger.write('\tFound class: {}\n'.format(qname))
+            elif binder.is_typedef:
+                mod.typedefs.append(binder)
+                logger.write('\tFound typedef: {}\n'.format(qname))
             elif binder.is_class_template:
-                templates[binder.qualified_name].add(binder)
-                continue
+                mod.templates.append(binder)
+                logger.write('\tFound class template: {}\n'.format(qname))
+            else:
+                logger.write('\tFound unknown cursor: {}\n'.format(qname))
 
-            # Continue processing class, struct, or typedef
-
-            # Some binders should be ignored
-            spelling = binder.spelling
-            if spelling in ('handle', 'base_type', 'type_instance'):
-                continue
-            if spelling.startswith('Handle_'):
-                continue
-
-            # Get canonical declaration
-            type_ = binder.type
-            if type_.is_typedef:
-                type_ = binder.underlying_typedef_type
-            decl = type_.get_canonical().get_declaration()
-            if decl.is_null:
-                continue
-
-            # Add type
-            # TODO Support other types
-            if binder.is_class:
-                all_types[decl].add(binder)
-                logger.write('\tAdding {}.\n'.format(binder.qualified_name))
-
-        logger.write('done.\n\n')
-
-        # Add enum to their modules directly
-        for key in enums:
-            enum_set = enums[key]
-            for e in enum_set:
-                mod = self.get_module(e.module_name)
-                if mod is None:
-                    continue
-                mod.enums.append(e)
-
-        # Add functions to their module
-        for key in funcs:
-            func_set = funcs[key]
-            for f in func_set:
-                mod = self.get_module(f.module_name)
-                if mod is None:
-                    continue
-                mod.add_binder(key, f)
-
-        # TODO More pre-processing on types
-        for key in all_types:
-            type_set = all_types[key]
-            for b in type_set:
-                mod = self.get_module(b.module_name)
-                if mod is None:
-                    continue
-                mod.classes.append(b)
-
-    def group_binders(self):
-        """
-        Group binders based on their type.
-
-        :return: None.
-        """
-        logger.write('Grouping binders...\n')
-        for mod in self.modules:
-            mod.group_binders()
         logger.write('done.\n\n')
 
     def build_includes(self):
@@ -586,80 +521,19 @@ class Module(object):
     def __init__(self, name):
         self.name = name
 
-        self._binders = OrderedDict()
-        self.includes = []
         self.enums = []
         self.funcs = []
         self.classes = []
         self.typedefs = []
         self.templates = []
-        self.imports = []
+
         self.sorted_binders = []
-        self._overloaded_binders = defaultdict(list)
+
+        self.includes = []
+        self.imports = []
 
     def __repr__(self):
         return 'Module: {}'.format(self.name)
-
-    @property
-    def binders(self):
-        """
-        :return: Binders in module.
-        :rtype: list(binder.core.CursorBinder)
-        """
-        return self._binders.values()
-
-    def add_binder(self, key, binder):
-        """
-        Add a binder to the module.
-
-        :param str key: The key.
-        :param binder.core.CursorBinder binder: The binder.
-
-        :return: None.
-        """
-        if key in self._binders:
-            # Overloaded
-            msg = '\tAdding overloaded binder {},\n'.format(binder.spelling)
-            logger.write(msg)
-            self._overloaded_binders[key].append(binder)
-        else:
-            msg = '\tAdding binder {} to {}.\n'.format(binder.spelling,
-                                                       self.name)
-            logger.write(msg)
-            self._binders[key] = binder
-            self._overloaded_binders[key].append(binder)
-
-    def get_overloaded(self, name):
-        """
-        Get a list of binders that may be overloaded.
-
-        :param str name: The binder name.
-
-        :return: List of binders or empty list.
-        :rtype: list(binder.core.CursorBinder)
-        """
-        binders = list(self._overloaded_binders[name])
-        if len(binders) <= 1:
-            return []
-        return binders
-
-    def group_binders(self):
-        """
-        Group binders based on their type.
-
-        :return: None.
-        """
-        for b in self.binders:
-            if b.is_enum:
-                self.enums.append(b)
-            elif b.is_function:
-                self.funcs.append(b)
-            elif b.is_class:
-                self.classes.append(b)
-            elif b.is_typedef:
-                self.typedefs.append(b)
-            elif b.is_class_template:
-                self.templates.append(b)
 
     def sort_binders(self):
         """
@@ -668,7 +542,7 @@ class Module(object):
 
         :return: None.
         """
-        self.sorted_binders = self.enums + self.funcs + self.classes
+        self.sorted_binders = self.enums  # + self.funcs + self.classes
 
         # TODO Sort types
         # binders1 = list(self.classes)
@@ -720,13 +594,11 @@ class Module(object):
 
         :return: None.
         """
-        all_binders = (self.enums + self.funcs + self.classes + self.typedefs +
-                       self.templates)
-        for binder in all_binders:
-            # Handle overloads
-            binders = self.get_overloaded(binder.spelling)
-            if not binders:
-                binders = [binder]
+        for binder in self.sorted_binders:
+            # TODO Handle overloads in include generation
+            # binders = self.get_overloaded(binder.spelling)
+            # if not binders:
+            binders = [binder]
             for obinder in binders:
                 temp = obinder.build_includes()
                 for f in temp:
@@ -1671,14 +1543,11 @@ def bind_enum(binder, path):
 
     # Bind function name
     python_name = binder.python_name
-    # Hack to handle ::enum_constant
-    if not python_name:
-        python_name = binder.type.spelling
-    # Hack to handle anonymous enums
-    if python_name.startswith('(anonymous enum'):
-        python_name = binder.enum_constants[0].spelling
+    # Hack for "anonymous" enums
+    if not python_name or python_name.startswith('(anonymous enum'):
         msg = '\tFound anonymous enum: {}\n'.format(binder.type.spelling)
         logger.write(msg)
+        python_name = binder.enum_constants[0].spelling
     bind_name = '_'.join(['bind', python_name])
     binder.bind_name = bind_name
 
