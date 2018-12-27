@@ -362,6 +362,10 @@ class Generator(object):
             if binder.spelling.startswith('Handle_'):
                 continue
 
+            # Skip if function starts with "operator"
+            if binder.is_function and binder.spelling.startswith('operator'):
+                continue
+
             # Add binder only if it's in an OCCT header file.
             inc = binder.filename
             if inc not in self.available_incs:
@@ -542,7 +546,29 @@ class Module(object):
 
         :return: None.
         """
-        self.sorted_binders = self.enums  # + self.funcs + self.classes
+        # Sort enums based on their file location. Sometimes multiple enums are
+        # defined in a single file, so group them together.
+        file2enum = {}
+        for enum in self.enums:
+            if enum.filename in file2enum:
+                master = file2enum[enum.filename]
+                master.grouped_binders.append(enum)
+                enum.skip = True
+            else:
+                file2enum[enum.filename] = enum
+                self.sorted_binders.append(enum)
+
+        # Sort functions by their name. They may be overloaded so group them
+        # together.
+        spelling2func = {}
+        for func in self.funcs:
+            if func.spelling in spelling2func:
+                master = spelling2func[func.spelling]
+                master.grouped_binders.append(func)
+                func.skip = True
+            else:
+                spelling2func[func.spelling] = func
+                self.sorted_binders.append(func)
 
         # TODO Sort types
         # binders1 = list(self.classes)
@@ -595,12 +621,9 @@ class Module(object):
         :return: None.
         """
         for binder in self.sorted_binders:
-            # TODO Handle overloads in include generation
-            # binders = self.get_overloaded(binder.spelling)
-            # if not binders:
-            binders = [binder]
-            for obinder in binders:
-                temp = obinder.build_includes()
+            binders = [binder] + binder.grouped_binders
+            for binder_ in binders:
+                temp = binder_.build_includes()
                 for f in temp:
                     if f not in self.includes:
                         self.includes.append(f)
@@ -753,6 +776,8 @@ class CursorBinder(object):
         self._pname = None
         self.bind_name = None
         self.includes = []
+        self.grouped_binders = []
+        self.skip = False
 
         # Filename
         try:
@@ -1529,12 +1554,15 @@ def bind_enum(binder, path):
     """
     Bind an enum.
 
-    :param binder.core.CursorBinder binder: The binder.
+    :param binder.core2.CursorBinder binder: The binder.
     :param str path: The path to write the source file.
 
     :return: None.
     """
     src = []
+
+    # Get list of binders if grouped
+    binders = [binder] + binder.grouped_binders
 
     # Include files
     for inc in binder.includes:
@@ -1555,7 +1583,9 @@ def bind_enum(binder, path):
     src.append('void {}(py::module &mod){{\n\n'.format(bind_name))
 
     # Generate source
-    src += generate_enum(binder)
+    for binder_ in binders:
+        src += generate_enum(binder_)
+        src.append('\n')
     src.append('\n')
 
     # End function
@@ -1572,7 +1602,7 @@ def bind_function(binder, path):
     """
     Bind a function.
 
-    :param binder.core.CursorBinder binder: The binder.
+    :param binder.core2.CursorBinder binder: The binder.
     :param str path: The path to write the source file.
 
     :return: None.
@@ -1580,34 +1610,29 @@ def bind_function(binder, path):
     src = []
 
     # Get list of binders if function is overloaded
-    binders = [binder]
-    mod = Generator.get_module(binder.module_name)
-    if mod:
-        overloaded = mod.get_overloaded(binder.spelling)
-        if overloaded:
-            binders = overloaded
+    binders = [binder] + binder.grouped_binders
 
     # Include files
     used_includes = set()
-    for binder in binders:
-        for inc in binder.includes:
+    for binder_ in binders:
+        for inc in binder_.includes:
             if inc not in used_includes:
                 src.append('#include <{}>\n'.format(inc))
                 used_includes.add(inc)
     src.append('\n')
 
     # Bind function name
-    for binder in binders:
-        bind_name = '_'.join(['bind', binder.python_name])
-        binder.bind_name = bind_name
+    for binder_ in binders:
+        bind_name = '_'.join(['bind', binder_.python_name])
+        binder_.bind_name = bind_name
     bind_name = binders[0].bind_name
 
     # Bind function
     src.append('void {}(py::module &mod){{\n\n'.format(bind_name))
 
     # Generate source
-    for binder in binders:
-        src += generate_function(binder)
+    for binder_ in binders:
+        src += generate_function(binder_)
 
     # End function
     src.append('}')
