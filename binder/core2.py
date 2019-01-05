@@ -80,6 +80,8 @@ class Generator(object):
     excluded_mods = set()
     excluded_bases = dict()
     excluded_typedefs = set()
+    excluded_fields = set()
+    excluded_headers = set()
 
     import_guards = dict()
     extra_headers = dict()
@@ -273,6 +275,20 @@ class Generator(object):
                         self.excluded_bases[qname] = [base]
                     continue
 
+                # Excluded fields
+                if line.startswith('-field'):
+                    line = line.replace('-field', '')
+                    line = line.strip()
+                    self.excluded_fields.add(line)
+                    continue
+
+                # Excluded header
+                if line.startswith('-header'):
+                    line = line.replace('-header', '')
+                    line = line.strip()
+                    self.excluded_headers.add(line)
+                    continue
+
     def parse(self, file_, *args):
         """
         Parse the main include file.
@@ -342,6 +358,19 @@ class Generator(object):
 
         :return: None.
         """
+        enum_log = []
+        function_log = []
+        types_log = []
+        template_log = []
+        unknown_log = []
+
+        # Build aliases based on canonical types
+        canonical_types = {}
+        alias_log = []
+
+        # Available headers
+        available_incs = self.available_incs - self.excluded_headers
+
         logger.write('Traversing...\n')
         # Traverse the translation unit and group the binders into modules
         for binder in self.tu_binder.get_children():
@@ -368,7 +397,7 @@ class Generator(object):
 
             # Add binder only if it's in an OCCT header file.
             inc = binder.filename
-            if inc not in self.available_incs:
+            if inc not in available_incs:
                 continue
 
             # Add binder if it's in an available module
@@ -382,24 +411,80 @@ class Generator(object):
                 continue
 
             qname = binder.qualified_name
+            if not qname:
+                msg = '\tNo qualified name. Skipping {}.\n'.format(
+                    binder.type.spelling
+                )
+                logger.write(msg)
+                continue
+
             if binder.is_enum:
                 mod.enums.append(binder)
-                logger.write('\tFound enum: {}\n'.format(qname))
+                msg = '\tFound enum: {}\n'.format(qname)
+                enum_log.append(msg)
             elif binder.is_function:
                 mod.funcs.append(binder)
-                logger.write('\tFound function: {}\n'.format(qname))
+                msg = '\tFound function: {}({})\n'.format(qname, mod_name)
+                function_log.append(msg)
             elif binder.is_class:
-                mod.classes.append(binder)
-                logger.write('\tFound class: {}\n'.format(qname))
+                mod.types.append(binder)
+                msg = '\tFound class: {}\n'.format(qname)
+                types_log.append(msg)
+                spelling = binder.type.get_canonical().spelling
+                canonical_types[spelling] = binder
             elif binder.is_typedef:
-                mod.typedefs.append(binder)
-                logger.write('\tFound typedef: {}\n'.format(qname))
+                mod.types.append(binder)
+                msg = '\tFound typedef: {}\n'.format(qname)
+                types_log.append(msg)
+                # Check for an alias
+                spelling = binder.type.get_canonical().spelling
+                if spelling in canonical_types:
+                    alias = canonical_types[spelling]
+                    binder.alias = alias
+                    alias_qname = alias.qualified_name
+                    msg = '\tFound alias: {}-->{}\n'.format(qname,
+                                                            alias_qname)
+                    alias_log.append(msg)
+                else:
+                    canonical_types[spelling] = binder
             elif binder.is_class_template:
                 mod.templates.append(binder)
-                logger.write('\tFound class template: {}\n'.format(qname))
+                msg = '\tFound class template: {}\n'.format(qname)
+                template_log.append(msg)
             else:
-                logger.write('\tFound unknown cursor: {}\n'.format(qname))
+                msg = '\tFound unknown cursor: {}\n'.format(qname)
+                unknown_log.append(msg)
 
+        logger.write('done.\n\n')
+
+        logger.write('Enums...\n')
+        for txt in enum_log:
+            logger.write(txt)
+        logger.write('done.\n\n')
+
+        logger.write('Functions...\n')
+        for txt in function_log:
+            logger.write(txt)
+        logger.write('done.\n\n')
+
+        logger.write('Types...\n')
+        for txt in types_log:
+            logger.write(txt)
+        logger.write('done.\n\n')
+
+        logger.write('Class templates...\n')
+        for txt in template_log:
+            logger.write(txt)
+        logger.write('done.\n\n')
+
+        logger.write('Aliases...\n')
+        for txt in alias_log:
+            logger.write(txt)
+        logger.write('done.\n\n')
+
+        logger.write('Unknowns...\n')
+        for txt in unknown_log:
+            logger.write(txt)
         logger.write('done.\n\n')
 
     def build_includes(self):
@@ -408,8 +493,10 @@ class Generator(object):
 
         :return: None.
         """
+        logger.write('Building includes...\n')
         for mod in self.modules:
             mod.build_includes()
+        logger.write('done.\n\n')
 
     def build_imports(self):
         """
@@ -454,7 +541,7 @@ class Generator(object):
             mod.sort_binders()
         logger.write('done.\n\n')
 
-    def bind(self, path='./output/src'):
+    def bind(self, path='./output/modules'):
         """
         Bind the library.
 
@@ -465,6 +552,19 @@ class Generator(object):
         logger.write('Binding types...\n')
         for mod in self.modules:
             mod.bind(path)
+        logger.write('done.\n\n')
+
+    def bind_templates(self, path='./output/include'):
+        """
+        Bind the library.
+
+        :param str path: Path to write sub-folders.
+
+        :return:
+        """
+        logger.write('Binding templates...\n')
+        for mod in self.modules:
+            mod.bind_templates(path)
         logger.write('done.\n\n')
 
     def is_module(self, name):
@@ -486,7 +586,7 @@ class Generator(object):
         :param str name: Module name.
 
         :return: The existing module or new one.
-        :rtype: binder.core.Module
+        :rtype: binder.core2.Module
         """
         if name not in available_mods:
             return None
@@ -527,8 +627,7 @@ class Module(object):
 
         self.enums = []
         self.funcs = []
-        self.classes = []
-        self.typedefs = []
+        self.types = []
         self.templates = []
 
         self.sorted_binders = []
@@ -571,6 +670,8 @@ class Module(object):
                 self.sorted_binders.append(func)
 
         # TODO Sort types
+        self.sorted_binders += self.types
+
         # binders1 = list(self.classes)
         # canonical2original = {}
         # # Use canonical for typedefs
@@ -620,7 +721,8 @@ class Module(object):
 
         :return: None.
         """
-        for binder in self.sorted_binders:
+        all_binders = self.sorted_binders + self.templates
+        for binder in all_binders:
             binders = [binder] + binder.grouped_binders
             for binder_ in binders:
                 temp = binder_.build_includes()
@@ -662,7 +764,7 @@ class Module(object):
         """
         return self.is_dependent(other) and other.is_dependent(self)
 
-    def bind_templates(self, path='./inc'):
+    def bind_templates(self, path='./include'):
         """
         Bind templates.
 
@@ -680,7 +782,7 @@ class Module(object):
         for binder in binders:
             binder.bind(folder)
 
-    def bind(self, path='.'):
+    def bind(self, path='./modules'):
         """
         Bind the module.
 
@@ -760,9 +862,11 @@ class CursorBinder(object):
     :param clang.cindex.Cursor cursor: The underlying cursor.
 
     :ivar clang.cindex.Cursor cursor: The underlying cursor.
-    :ivar binder.core.CursorBinder alias: The alias of this binder if applicable.
+    :ivar binder.core.CursorBinder alias: The alias of this binder if
+        applicable.
     :ivar str parent_name: The name of the binding parent.
-    :ivar str python_name: Name for binder in Python if different than spelling.
+    :ivar str python_name: Name for binder in Python if different than
+        spelling.
     :ivar str bind_name: Function name for binding.
     :ivar list(str) includes: List of relevant include files for this binder.
     :ivar str module_name: The module name for this binder.
@@ -859,6 +963,31 @@ class CursorBinder(object):
             return self.cursor.displayname
         except AttributeError:
             return 'NULL'
+
+    @property
+    def qualified_display_name(self):
+        """
+        :return: The qualified display name.
+        :rtype: str
+        """
+        names = []
+        b = self
+        while not b.is_null and not b.is_tu:
+            name = b.display_name
+            if name:
+                names.append(b.display_name)
+            else:
+                break
+            b = b.parent
+        names.reverse()
+        qname = '::'.join(names)
+
+        if 'operator()' in qname:
+            # Hack for call operator...
+            qname = qname.split('()')[0]
+            return ''.join([qname, '()'])
+
+        return qname
 
     @property
     def spelling(self):
@@ -1017,19 +1146,28 @@ class CursorBinder(object):
         if self.is_enum:
             return self.qualified_name in Generator.excluded_enums
         elif self.is_function or self.is_constructor:
-            return self.qualified_name in Generator.excluded_functions
+            name = self.qualified_name
+            # Special case trying to exclude functions with certain signatures
+            dname = self.qualified_display_name
+            return (name in Generator.excluded_functions or
+                    dname in Generator.excluded_functions)
         elif self.is_class or self.is_class_template:
             return self.qualified_name in Generator.excluded_classes
         elif self.is_typedef:
             return self.qualified_name in Generator.excluded_typedefs
+        elif self.is_field:
+            return self.qualified_name in Generator.excluded_fields
         elif self.is_cxx_method:
             # Check if method name or qualified name is excluded
             name, fname = self.qualified_name, self.spelling
+            # Special case trying to exclude functions with certain signatures
+            dname = self.qualified_display_name
             if self.is_static_method:
                 name += '_'
                 fname += '_'
             return (name in Generator.excluded_functions or
-                    fname in Generator.excluded_fnames)
+                    fname in Generator.excluded_fnames or
+                    dname in Generator.excluded_functions)
 
         return False
 
@@ -1353,8 +1491,9 @@ class CursorBinder(object):
         # Extra headers
         qname = self.qualified_name
         if qname in Generator.extra_headers:
-            for inc in Generator.extra_headers[qname]:
-                includes.append(inc)
+            for f in Generator.extra_headers[qname]:
+                if f not in includes:
+                    includes.append(f)
 
         # Traverse the binder and look for any type references.
         for item in self.dfs():
@@ -1379,10 +1518,18 @@ class CursorBinder(object):
         # Replace any .lxx or .gxx with .hxx
         for inc in includes:
             if '.lxx' in inc:
+                msg = '\tReplacing include extension for {}: {}.\n'.format(
+                    qname, inc)
+                logger.write(msg)
                 inc = inc.replace('.lxx', '.hxx')
             elif '.gxx' in inc:
+                msg = '\tReplacing include extension for {}: {}.\n'.format(
+                    qname, inc)
+                logger.write(msg)
                 inc = inc.replace('.gxx', '.hxx')
-            self.includes.append(inc)
+            if (inc not in self.includes and
+                    inc not in Generator.excluded_headers):
+                self.includes.append(inc)
 
         return includes
 
@@ -1572,7 +1719,8 @@ def bind_enum(binder, path):
     # Bind function name
     python_name = binder.python_name
     # Hack for "anonymous" enums
-    if not python_name or python_name.startswith('(anonymous enum'):
+    # if not python_name or  python_name.startswith('(anonymous enum'):
+    if not python_name or '(anonymous enum' in python_name:
         msg = '\tFound anonymous enum: {}\n'.format(binder.type.spelling)
         logger.write(msg)
         python_name = binder.enum_constants[0].spelling
@@ -1708,7 +1856,7 @@ def bind_typedef(binder, path):
     src = ['void {}(py::module &mod){{\n\n'.format(bind_name)]
 
     # Generate source
-    other_src, bind_template = generate_typedef(binder)
+    other_src, bind_template, extra = generate_typedef(binder)
 
     # Comment if excluded
     if binder.is_excluded:
@@ -1726,7 +1874,7 @@ def bind_typedef(binder, path):
     if bind_template:
         includes.append('\n')
 
-    src = includes + src
+    src = includes + extra + src
     src.append('\n')
 
     # End function
@@ -1766,8 +1914,15 @@ def bind_class_template(binder, path):
     Generator.available_templates.add(binder.bind_name)
 
     # Function template
-    template_params = ['typename ' + b.display_name for b in
-                       binder.template_parameters]
+    # template_params = ['typename ' + b.display_name for b in
+    #                    binder.template_parameters]
+    template_params = []
+    for t in binder.template_parameters:
+        if t.is_template_type_param:
+            template_params.append('typename {}'.format(t.display_name))
+        else:
+            template_params.append('{} {}'.format(t.type.spelling,
+                                                  t.display_name))
     src.append('template <{}>\n'.format(', '.join(template_params)))
 
     # Bind function
@@ -1805,19 +1960,31 @@ def generate_enum(binder):
 
     # Names
     qname = binder.qualified_name
-    name = binder.python_name
     parent = binder.parent_name
     docs = binder.docs
 
     # Cast anonymous enum to int
-    if binder.type.spelling.startswith('(anonymous enum'):
+    # if binder.type.spelling.startswith('(anonymous enum'):
+    if '(anonymous enum' in binder.type.spelling:
         for e in binder.enum_constants:
             name, qname = e.spelling, e.qualified_name
+            # Check and fix if anonymous is in the enum decl
+            if '(anonymous' in e.type.spelling:
+                indx = e.type.spelling.find('(anonymous')
+                if indx:
+                    prefix = e.type.spelling[:indx]
+                    qname = ''.join([prefix, e.spelling])
             txt = '{}.attr(\"{}\") = py::cast(int({}));\n'.format(parent,
                                                                   name,
                                                                   qname)
             src.append(txt)
     else:
+        name = binder.python_name
+        # Hack for missing name
+        if not name:
+            name = binder.type.spelling
+            name = name.replace('::', '_')
+
         # Hack to handle ::enum_constant
         if not qname:
             qname = binder.type.spelling
@@ -1827,10 +1994,12 @@ def generate_enum(binder):
                                                            docs)
         src.append(txt)
         for e in binder.enum_constants:
-            # Hack to handle ::enum_constant
+            # Hack to handle ::enum_constant or missing qualified name
             qname = e.qualified_name
             if qname.startswith('::'):
                 qname = ''.join([binder.type.spelling, qname])
+            elif '::' not in qname:
+                qname = '::'.join([e.type.spelling, e.spelling])
             txt = '\t.value(\"{}\", {})\n'.format(e.spelling, qname)
             src.append(txt)
         src.append('\t.export_values();\n')
@@ -1898,6 +2067,12 @@ def generate_class(binder):
     :return: Binder source as a list of lines.
     :rtype: list(str)
     """
+    # Don't bind if it doesn't have any children.
+    if len(binder.get_children()) == 0:
+        logger.write(
+            '\tNot binding class: {}\n'.format(binder.python_name))
+        return []
+
     # Names
     name = binder.python_name
     qname = binder.qualified_name
@@ -1913,17 +2088,27 @@ def generate_class(binder):
     elif binder.needs_nodelete or qname in Generator.nodelete:
         holder = ', std::unique_ptr<{}, py::nodelete>'.format(qname)
 
+    # Excluded base classes
     base_names = []
     bases_classes = binder.bases
-    try:
+    if qname in Generator.excluded_bases:
         excluded_bases = Generator.excluded_bases[qname]
-    except KeyError:
+    elif name in Generator.excluded_bases:
+        excluded_bases = Generator.excluded_bases[name]
+    else:
         excluded_bases = []
+
+    # Base classes
     for base in bases_classes:
         if not base.is_public:
             continue
         name = base.qualified_spelling
         name = name.replace('class ', '')
+        name = name.replace('struct ', '')
+
+        if binder.python_name == 'Poly_BaseIteratorOfCoherentLink':
+            print()
+
         if name not in excluded_bases:
             base_names.append(name)
     if base_names:
@@ -2043,6 +2228,9 @@ def generate_field(binder):
     if binder.type.is_const_qualified:
         type_ = 'readonly'
 
+    if binder.is_excluded:
+        prefix = '// {}'.format(prefix)
+
     src = [
         '{}.def_{}(\"{}\", &{}, \"{}\");\n'.format(prefix, type_, name, qname,
                                                    docs)]
@@ -2057,7 +2245,7 @@ def generate_method(binder):
     """
     Generate source for class member function.
 
-    :param binder.core.CursorBinder binder: The binder.
+    :param binder.core2.CursorBinder binder: The binder.
 
     :return: Binder source as a list of lines.
     :rtype: list(str)
@@ -2079,7 +2267,7 @@ def generate_method(binder):
 
     # Comment if excluded or returns a pointer
     # TODO How to handle pointers?
-    if binder.is_excluded or binder.rtype.is_pointer:
+    if binder.is_excluded:  # or binder.rtype.is_pointer:
         prefix = '// {}'.format(prefix)
 
     rtype = binder.rtype.spelling
@@ -2177,16 +2365,12 @@ def generate_typedef(binder):
     :return: Binder source as a list of lines and extra headers if needed.
     :rtype: tuple(list(str), list(str))
     """
-    if binder.spelling == 'BOPDS_DataMapIteratorOfDataMapOfPaveBlockListOfInteger':
-        print()
-
     # Bind an alias
     alias = binder.alias
     this_module = binder.module_name
     if alias is not None:
         other_mod = alias.module_name
         if other_mod == this_module:
-            # TODO What name to use? Python name?
             src = [
                 'if (py::hasattr(mod, \"{}\")) {{\n'.format(alias.python_name),
                 '\tmod.attr(\"{}\") = mod.attr(\"{}\");\n'.format(
@@ -2203,26 +2387,33 @@ def generate_typedef(binder):
                     binder.python_name, alias.python_name),
                 '}\n'
             ]
-        return src, None
+        return src, None, []
 
     # Bind class
-    type_ = binder.underlying_typedef_type.get_canonical()
+    # type_ = binder.underlying_typedef_type.get_canonical()
+    type_ = binder.type.get_canonical()
     decl = type_.get_declaration()
     template = decl.get_specialization()
     if type_.is_record and template.is_class_template:
-        src = ['bind_{}({}, \"{}\");\n'.format(type_.spelling,
-                                               binder.parent_name,
-                                               binder.python_name)]
-        return src, ['bind_{}'.format(decl.spelling)]
+        if type_.spelling.startswith('std::vector'):
+            txt = type_.spelling, binder.parent_name, binder.python_name
+            src = ['py::bind_vector<{}>({}, \"{}\");\n'.format(*txt)]
+            extra = ['PYBIND11_MAKE_OPAQUE({})\n\n'.format(txt[0])]
+            return src, [], extra
+        else:
+            src = ['bind_{}({}, \"{}\");\n'.format(type_.spelling,
+                                                   binder.parent_name,
+                                                   binder.python_name)]
+            return src, ['bind_{}'.format(decl.spelling)], []
 
     elif type_.is_record and decl.is_class:
         decl.python_name = binder.spelling
         src = generate_class(decl)
-        return src, []
+        return src, [], []
 
     logger.write(
-        '\tNot binding typedef: {}\n'.format(binder.qualified_spelling))
-    return [], []
+        '\tNot binding typedef: {}\n'.format(binder.python_name))
+    return [], [], []
 
 
 def generate_class_template(binder):

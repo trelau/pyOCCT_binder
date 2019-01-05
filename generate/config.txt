@@ -6,14 +6,84 @@
 +arg -fms-compatibility-version=19
 +arg -D__CODE_GENERATOR__
 
+# Excluded headers ------------------------------------------------------------
+-header AdvApp2Var_Data_f2c.hxx
+
+-header glext.h
+
+-header NCollection_Shared.hxx
+
 # Excluded classes ------------------------------------------------------------
--class Standard_UUID
+-class Cocoa_LocalPool
+
+-class Font_BRepFont
+
+-class FT_Vector
+
+-class OpenGl_BVHClipPrimitiveSet
+-class OpenGl_BVHClipPrimitiveTrsfPersSet
+-class OpenGl_CappingAlgoFilter
+-class OpenGl_GraduatedTrihedron
+-class OpenGl_Layer
+-class OpenGl_LayerList
+-class OpenGl_Group
+-class OpenGl_LineAttributes
+-class OpenGl_RaytraceFilter
+-class OpenGl_RaytraceGeometry
+-class OpenGl_RaytraceMaterial
+-class OpenGl_StencilTest
+-class OpenGl_Structure
+-class OpenGl_VariableSetterSelector
+-class OpenGl_View
+
+-class ShapePersistent_BRep
+-class ShapePersistent_Geom
+-class ShapePersistent_Geom_Curve
+-class ShapePersistent_Geom_Surface
+-class ShapePersistent_Geom2d
+-class ShapePersistent_Geom2d_Curve
+-class ShapePersistent_Poly
+-class ShapePersistent_TopoDS
+
+-class StdStorage_Bucket
+-class StdStorage_BucketIterator
+-class StdStorage_BucketOfPersistent
+
+-class Storage_Bucket
+-class Storage_BucketIterator
+-class Storage_BucketOfPersistent
 
 # Excluded typedefs -----------------------------------------------------------
+-typedef BRepBuilderAPI_CellFilter
+
+-typedef BVH_EncodedLink
+
+-typedef FSD_FStream
+
+-typedef gp_TrsfNLerp
+
+-typedef Graphic3d_IndexedMapOfAddress
+-typedef Graphic3d_NMapOfTransient
+
+-typedef MeshVS_TwoColors
+
+-typedef QuadBvhHandle
+-typedef OpenGl_ListOfStructure
+-typedef OpenGl_SetterList
+
+-typedef Plugin_MapOfFunctions
+
+-typedef SelectMgr_IndexedMapOfOwner
+
 -typedef Standard_OStream
 -typedef Standard_SStream
 -typedef Standard_IStream
--typedef gp_TrsfNLerp
+
+-typedef TDF_HAllocator
+
+-typedef TNaming_DataMapOfShapePtrRefShape
+
+-typedef TopOpeBRepTool_IndexedDataMapOfSolidClassifier
 
 # Excluded functions ----------------------------------------------------------
 -function* operator new_
@@ -21,31 +91,442 @@
 -function* operator new[]_
 -function* operator delete[]_
 -function* operator=
--function operator<<
+-function* operator->
+
+-function AppDef_MultiLine::SetParameter
+-function AppDef_ResConstraintOfMyGradientbisOfBSplineCompute::Error
+-function AppDef_ResConstraintOfMyGradientOfCompute::Error
+-function AppDef_ResConstraintOfTheGradient::Error
+-function AppDef_TheResol::Error
+
+-function AdvApp2Var_Iso::AdvApp2Var_Iso(const GeomAbs_IsoType, const Standard_Integer, const Standard_Integer)
+
+-function BinTools_Curve2dSet::Dump
+
+-function BlendFunc::Knots_
+-function BlendFunc::Mults_
+
+-function BOPAlgo_PaveFiller::Iterator
+-function BOPAlgo_Tools::PerformCommonBlocks_
+
+-function BRepAlgo_DSAccess::IsDeleted
+
+-function BRepApprox_Approx::Perform()
+-function BRepApprox_ResConstraintOfMyGradientOfTheComputeLineBezierOfApprox::Error
+-function BRepApprox_ResConstraintOfMyGradientbisOfTheComputeLineOfApprox::Error
+-function BRepApprox_TheImpPrmSvSurfacesOfApprox::FillInitialVectorOfSolution
+
+-function BRepClass3d_BndBoxTreeSelectorLine::BRepClass3d_BndBoxTreeSelectorLine
+-function BRepClass3d_BndBoxTreeSelectorPoint::BRepClass3d_BndBoxTreeSelectorPoint
+
+-function BRepExtrema_OverlapTool::BRepExtrema_OverlapTool
+-function BRepExtrema_OverlapTool::LoadTriangleSets
+-function BRepExtrema_OverlapTool::Perform
+
+-function BRepFeat::IsInOut_
+-function BRepFeat_MakeLinearForm::TransformShapeFU
+
+-function BRepGProp_VinertGK::GetAbsolutError
+
+-function BRepMesh_DataStructureOfDelaun::ElementNodes
+-function BRepMesh_Delaun::Frontier
+-function BRepMesh_Delaun::InternalEdges
+-function BRepMesh_Delaun::FreeEdges
+-function BRepMesh_EdgeParameterProvider::BRepMesh_EdgeParameterProvider
+-function BRepMesh_EdgeParameterProvider::Parameter
+-function BRepMesh_EdgeTessellator::BRepMesh_EdgeTessellator
+-function BRepMesh_EdgeTessellationExtractor::BRepMesh_EdgeTessellationExtractor
+-function BRepMesh_IncrementalMesh::Discret_
+-function BRepMesh_GeomTool::IntLinLin_
+-function BRepMesh_Triangle::BRepMesh_Triangle(const Standard_Integer (&)[3], const Standard_Boolean (&)[3], const BRepMesh_DegreeOfFreedom)
+-function BRepMesh_Triangle::Initialize
+-function BRepMesh_Triangle::Edges
+-function BRepMesh_WireInterferenceChecker::BRepMesh_WireInterferenceChecker
+-function BRepMesh_WireInterferenceChecker::operator()
+
+-function BRepOffset_MakeOffset::GetAnalyse
+-function BRepOffset_MakeSimpleOffset::GetSafeOffset
+
+-function BRepOffsetAPI_FindContigousEdges::NbEdges
+
+-function BSplCLib::DN(const Standard_Real, const Standard_Integer, const TColgp_Array1OfPnt &, const TColStd_Array1OfReal &, gp_Pnt &, gp_Vec &)
+-function BSplCLib::DN(const Standard_Real, const Standard_Integer, const TColgp_Array1OfPnt2d &, const TColStd_Array1OfReal &, gp_Pnt2d &, gp_Vec2d &)
+
+-function BVH_PrimitiveSet<T, N>::BVH_PrimitiveSet<T, N>
+
+-function CDM_Document::operator<<
+-function CDM_MetaData::operator<<
+
+-function Cocoa_Window::Cocoa_Window
+-function Cocoa_Window::HView
+-function Cocoa_Window::SetHView
+-function Cocoa_Window::get_type_descriptor_
+
+-function DsgPrs_RadiusPresentation::Add(const opencascade::handle<Prs3d_Presentation> &, const opencascade::handle<Prs3d_Drawer> &, const TCollection_ExtendedString &, const gp_Pnt &, const gp_Circ &, const Standard_Real, const Standard_Real, const DsgPrs_ArrowSide, const Standard_Boolean, const Standard_Boolean)
+
+-function FilletPoint::FilletPoint
+-function FilletPoint::appendValue
+-function FilletPoint::calculateDiff
+-function FilletPoint::FilterPoints
+-function FilletPoint::Copy
+-function FilletPoint::hasSolution
+-function FilletPoint::remove
+
+-function Font_FTLibrary::Instance
+
+-function GCPnts_DistFunction::GCPnts_DistFunction(const GCPnts_DistFunction &)
+-function GCPnts_DistFunction2d::GCPnts_DistFunction2d(const GCPnts_DistFunction2d &)
+
+-function Geom2dAPI_Interpolate::ClearTangents
+
+
+-function Geom2dGcc_FunctionTanCuCuCu::Geom2dGcc_FunctionTanCuCuCu(const gp_Circ2d &, const Geom2dAdaptor_Curve &, const gp_Pnt2d &)
+-function Geom2dGcc_FunctionTanCuCuCu::Geom2dGcc_FunctionTanCuCuCu(const gp_Lin2d &, const Geom2dAdaptor_Curve &, const gp_Pnt2d &)
+-function Geom2dGcc_FunctionTanCuCuCu::Geom2dGcc_FunctionTanCuCuCu(const Geom2dAdaptor_Curve &, const gp_Pnt2d &, const gp_Pnt2d &)
+-function Geom2dGcc_Lin2dTanObl::IsParallel2
+
+-function Geom2dHatch_Hatcher::IsDone()
+
+-function Geom2dInt_Geom2dCurveTool::IsComposite_
+-function Geom2dInt_TheCurveLocatorOfTheProjPCurOfGInter::Locate(const Adaptor2d_Curve2d &, const Adaptor2d_Curve2d &, const Standard_Integer, const Standard_Integer, Extrema_POnCurv2d &, Extrema_POnCurv2d &)
+
+-function GeomAPI_Interpolate::ClearTangents
+
+-function GeomFill_FunctionGuide::Deriv2T
+-function GeomFill_NSections::GeomFill_NSections(const TColGeom_SequenceOfCurve &, const TColStd_SequenceOfReal &, const Standard_Real, const Standard_Real)
+-function GeomFill_SweepSectionGenerator::GeomFill_SweepSectionGenerator(const opencascade::handle<Geom_Curve> &, const opencascade::handle<Geom_Curve> &, const opencascade::handle<Geom_Curve> &, const Standard_Real)
+-function GeomFill_SweepSectionGenerator::Init(const opencascade::handle<Geom_Curve> &, const opencascade::handle<Geom_Curve> &, const opencascade::handle<Geom_Curve> &, const Standard_Real)
+
+-function GeomInt_IntSS::SetTolFixTangents
+-function GeomInt_IntSS::TolFixTangents
+-function GeomInt_ResConstraintOfMyGradientOfTheComputeLineBezierOfWLApprox::Error
+-function GeomInt_ResConstraintOfMyGradientbisOfTheComputeLineOfWLApprox::Error
+-function GeomInt_TheImpPrmSvSurfacesOfWLApprox::FillInitialVectorOfSolution
+-function GeomInt_WLApprox::Perform()
+
+-function Graphic3d_AspectText3d::Values
+
+-function HLRAlgo_PolyInternalData::UpdateLinks
+-function HLRAlgo_PolyInternalData::AddNode
+-function HLRAlgo_PolyInternalData::IncTData
+-function HLRAlgo_PolyInternalData::IncPISeg
+-function HLRAlgo_PolyInternalData::IncPINod
+
+-function HLRBRep_BSurfaceTool::Axis_
+
+-function HLRBRep_CLProps::HLRBRep_CLProps(const HLRBRep_Curve *&, const Standard_Integer, const Standard_Real)
+-function HLRBRep_CLProps::HLRBRep_CLProps(const HLRBRep_Curve *&, const Standard_Real, const Standard_Integer, const Standard_Real)
+-function HLRBRep_CLProps::SetCurve
+
+-function HLRBRep_Surface::UIntervalContinuity
+-function HLRBRep_Surface::VIntervalContinuity
+
+-function HLRBRep_TheCurveLocatorOfTheProjPCurOfCInter::Locate(const Standard_Address &, const Standard_Address &, const Standard_Integer, const Standard_Integer, Extrema_POnCurv2d &, Extrema_POnCurv2d &)
+
+-function HLRBRep_ThePolyhedronOfInterCSurf::UMinSingularity
+-function HLRBRep_ThePolyhedronOfInterCSurf::UMaxSingularity
+-function HLRBRep_ThePolyhedronOfInterCSurf::VMinSingularity
+-function HLRBRep_ThePolyhedronOfInterCSurf::VMaxSingularity
+-function HLRBRep_ThePolyhedronOfInterCSurf::HasUMinSingularity
+-function HLRBRep_ThePolyhedronOfInterCSurf::HasUMaxSingularity
+-function HLRBRep_ThePolyhedronOfInterCSurf::HasVMinSingularity
+-function HLRBRep_ThePolyhedronOfInterCSurf::HasVMaxSingularity
+
+-function IFSelect_ContextModif::Search
+-function IFSelect_EditForm::NbTouched
+-function IFSelect_IntParam::StaticName
+
+-function Interface_STAT::Description
+-function Interface_STAT::Phase
+
+-function IGESData_IGESReaderData::DirValues
+
+-function IGESSelect_SelectBasicGeom::CurvesOnly
+
+-function IGESToBRep_TopoSurface::TransferPlaneSurface
+
+-function MyDirectPolynomialRoots::MyDirectPolynomialRoots
+
+-function Interval::Interval
+-function Interval::IntersectionWithBounded
+-function Interval::Length
+
+-function PeriodicInterval::FirstIntersection
+-function PeriodicInterval::SecondIntersection
+
+-function IntCurveSurface_ThePolyhedronOfHInter::HasUMinSingularity
+-function IntCurveSurface_ThePolyhedronOfHInter::HasUMaxSingularity
+-function IntCurveSurface_ThePolyhedronOfHInter::HasVMinSingularity
+-function IntCurveSurface_ThePolyhedronOfHInter::HasVMaxSingularity
+-function IntCurveSurface_ThePolyhedronOfHInter::UMinSingularity
+-function IntCurveSurface_ThePolyhedronOfHInter::UMaxSingularity
+-function IntCurveSurface_ThePolyhedronOfHInter::VMinSingularity
+-function IntCurveSurface_ThePolyhedronOfHInter::VMaxSingularity
+
+-function IntImpParGen_ImpTool::Value
+-function IntImpParGen_ImpTool::D1
+-function IntImpParGen_ImpTool::D2
+-function IntImpParGen_ImpTool::Distance
+-function IntImpParGen_ImpTool::GradDistance
+-function IntImpParGen_ImpTool::FindParameter
+
+-function IntPatch_Polyhedron::Perform
+-function IntPatch_Polyhedron::HasUMinSingularity
+-function IntPatch_Polyhedron::HasUMaxSingularity
+-function IntPatch_Polyhedron::HasVMinSingularity
+-function IntPatch_Polyhedron::HasVMaxSingularity
+-function IntPatch_Polyhedron::UMinSingularity
+-function IntPatch_Polyhedron::UMaxSingularity
+-function IntPatch_Polyhedron::VMinSingularity
+-function IntPatch_Polyhedron::VMaxSingularity
+-function IntPatch_RLine::SetParamOnS1
+-function IntPatch_RLine::SetParamOnS2
+
+-function IntPolyh_Array<Type>::Dump
+-function IntPolyh_Array<Type>::IntPolyh_Array<Type>
+-function IntPolyh_MaillageAffinage::GetFinTE
+-function IntPolyh_MaillageAffinage::GetFinTT
+
+-function IntTools_PntOnFace::IsValid
+
+-function Law_Interpolate::ClearTangents
+
+-function LDOM_BasicAttribute::SetValue
+-function LDOM_BasicElement::Create_
+-function LDOM_BasicText::SetData
+-function LDOM_CharReference::Decode_
+-function LDOM_CharReference::Encode_
+-function LDOM_Document::operator==
+-function LDOM_Document::operator!=
+-function LDOM_MemManager::HashedAllocate
+-function LDOM_MemManager::Hash_
+-function LDOM_MemManager::CompareStrings_
+-function LDOM_Node::operator==
+-function LDOM_Node::operator!=
+-function LDOM_NodeList::operator==
+-function LDOM_NodeList::operator!=
+-function LDOM_XmlReader::LDOM_XmlReader
+-function LDOM_XmlReader::ReadRecord
+-function LDOM_XmlReader::CreateElement
+-function LDOM_XmlReader::getInteger_
+
+-function LDOMBasicString::operator==
+-function LDOMBasicString::operator!=
+
+-function LDOMString::LDOMString(const LDOMString &)
+
+-function LocOpe_Revol::LocOpe_Revol(const TopoDS_Shape &, const gp_Ax1 &, const Standard_Real, const Standard_Real)
+-function LocOpe_Revol::LocOpe_Revol(const TopoDS_Shape &, const gp_Ax1 &, const Standard_Real)
+-function LocOpe_RevolutionForm::LocOpe_RevolutionForm(const TopoDS_Shape &, const gp_Ax1 &, const Standard_Real)
+
+-function math_NewtonFunctionSetRoot::StateNumber
+-function math_NewtonMinimum::IsConvex
+
+-function MAT2d_CutCurve::Perform(const opencascade::handle<Geom2d_Curve> &, const MAT_Side)
+-function MAT2d_CutCurve::PerformInf
+
+-function MoniTool_AttrList::GetStringAttribute
+-function MoniTool_CaseData::Text
+-function MoniTool_TypedValue::Internals
+
+-function NCollection_DataMap<TheKeyType, TheItemType, Hasher>::Bound
+-function NCollection_DataMap<TheKeyType, TheItemType, Hasher>::Seek
+-function NCollection_DataMap<TheKeyType, TheItemType, Hasher>::ChangeSeek
+-function NCollection_IndexedDataMap<TheKeyType, TheItemType, Hasher>::Seek
+-function NCollection_IndexedDataMap<TheKeyType, TheItemType, Hasher>::ChangeSeek
+-function NCollection_ListNode::NCollection_ListNode
+-function NCollection_SeqNode::NCollection_SeqNode
+-function NCollection_Vec2<Element_t>::cwiseAbs
+-function NCollection_Vec3<Element_t>::cwiseAbs
+-function NCollection_Vec4<Element_t>::cwiseAbs
+
+-function OSD::RealToCString_
+-function OSD_Path::LocateExecFile
+
+-function OpenGl_GlCore11::glGetPointerv
+-function OpenGl_Material::Init
+-function OpenGl_RaytraceLight::OpenGl_RaytraceLight
+-function OpenGl_ShaderManager::PushMaterialState
+-function OpenGl_TriangleSet::OpenGl_TriangleSet
+-function OpenGl_TriangleSet::QuadBVH
+-function OpenGl_Workspace::BufferDump
+-function OpenGl_Workspace::ResetAppliedAspect
+
+-function PCDM::FileDriverType_
+-function PCDM_DOMHeaderParser::SetStartElementName
+-function PCDM_DOMHeaderParser::SetEndElementName
+
+-function Poly_CoherentTriPtr::Poly_CoherentTriPtr
+
+-function ProjLib_ProjectOnSurface::Load(const opencascade::handle<Adaptor3d_HSurface> &)
+
+-function Resource_Unicode::ConvertUnicodeToSJIS_
+-function Resource_Unicode::ConvertUnicodeToEUC_
+-function Resource_Unicode::ConvertUnicodeToGB_
+-function Resource_Unicode::ConvertUnicodeToANSI_
+-function Resource_Unicode::ConvertUnicodeToFormat_
+
+-function ShapeAnalysis_BoxBndTreeSelector::ShapeAnalysis_BoxBndTreeSelector
+
+-function ShapeFix_WireSegment::ShapeFix_WireSegment(const TopoDS_Wire &, const TopAbs_Orientation)
+
+-function StdPersistent_DataXtd_Constraint::Import
+-function StdPersistent_DataXtd_PatternStd::Import
+-function StdPersistent_TopLoc::Translate_
+
+-function StdLPersistent_NamedData::Import
+
+-function StdObject_Location::Import
+
+-function StdSelect_BRepOwner::Set
+
+-function StepData_FreeFormEntity::StepData_FreeFormEntity
+-function StepData_StepReaderData::ReadEnumParam
+-function StepData_UndefinedEntity::Super
+
+-function StepFEA_SymmetricTensor43d::SetFeaIsotropicSymmetricTensor43d
+
+-function STEPSelections_Counter::POP
+-function STEPSelections_Counter::POP2
+
+-function StepToTopoDS_Builder::StepToTopoDS_Builder(const opencascade::handle<StepShape_GeometricSet> &, const opencascade::handle<Transfer_TransientProcess> &)
+
+-function TCollection_ExtendedString::ToUTF8CString
+
+-function TNaming_RefShape::FirstUse
+
+-function Transfer_Finder::GetStringAttribute
+
+-function TransferBRep::BRepCheck_
+
+-function TopOpeBRepBuild_Builder1::GFillSplitsPVS
+
+-function VrmlData_IndexedFaceSet::GetNormal
+-function VrmlData_IndexedFaceSet::Polygons
+-function VrmlData_IndexedFaceSet::Polygon
+-function VrmlData_IndexedFaceSet::SetPolygons
+-function VrmlData_IndexedFaceSet::ArrayNormalInd
+-function VrmlData_IndexedFaceSet::IndiceNormals
+-function VrmlData_IndexedFaceSet::SetNormalInd
+-function VrmlData_IndexedFaceSet::ArrayColorInd
+-function VrmlData_IndexedFaceSet::SetColorInd
+-function VrmlData_IndexedFaceSet::ArrayTextureCoordInd
+-function VrmlData_IndexedFaceSet::SetTextureCoordInd
+
+-function VrmlData_IndexedLineSet::Polygons
+-function VrmlData_IndexedLineSet::Polygon
+-function VrmlData_IndexedLineSet::SetPolygons
+-function VrmlData_IndexedLineSet::ArrayColorInd
+-function VrmlData_IndexedLineSet::SetColorInd
+
+-function VrmlData_Scene::ReadArrIndex
+-function VrmlData_Scene::WriteArrIndex
+
+-function XCAFDoc_GeomTolerance::XCAFDoc_GeomTolerance(const opencascade::handle<XCAFDoc_GeomTolerance> &)
+
+-function XBRepMesh::Discret_
+
+-function XmlObjMgt::GetInteger_
+-function XmlObjMgt::GetReal_
+
+-function XSControl_Vars::Get
+-function XSControl_Vars::GetGeom
+-function XSControl_Vars::GetCurve2d
+-function XSControl_Vars::GetCurve
+-function XSControl_Vars::GetSurface
+-function XSControl_Vars::GetPoint
+-function XSControl_Vars::GetPoint2d
+-function XSControl_Vars::GetShape
 
 # Excluded enums --------------------------------------------------------------
 
 # Extra headers ---------------------------------------------------------------
++header BinMXCAFDoc_LocationDriver: BinTools_LocationSet.hxx
+
 +header BOPAlgo_Builder: BOPDS_DS.hxx
 +header BOPAlgo_Tools: BOPDS_DS.hxx
 +header BOPAlgo_PaveFiller: BOPDS_Iterator.hxx
 
-+header BRepAlgoAPI_BuilderAlgo: BOPAlgo_Builder.hxx
-
 +header BOPDS_DataMapIteratorOfDataMapOfPaveBlockListOfInteger: BOPDS_PaveBlock.hxx
 +header BOPDS_ListIteratorOfListOfPaveBlock: BOPDS_PaveBlock.hxx
 
-+header gp_Vec: gp_Ax1.hxx
-+header gp_Vec: gp_Ax2.hxx
++header BRepAlgoAPI_BuilderAlgo: BOPAlgo_Builder.hxx
+
++header BRepBuilderAPI_CellFilter: gp_XY.hxx
++header BRepBuilderAPI_CellFilter: gp_XYZ.hxx
++header BRepBuilderAPI_VertexInspector: gp_XY.hxx
++header BRepBuilderAPI_VertexInspector: gp_XYZ.hxx
+
++header BRepFill_PipeShell: TopTools_HArray1OfShape.hxx
+
++header BRepGProp_Gauss: BRepGProp_Face.hxx
++header BRepGProp_Gauss: BRepGProp_Domain.hxx
+
++header BRepMesh_CircleInspector: gp_XY.hxx
++header BRepMesh_CircleInspector: gp_XYZ.hxx
++header BRepMesh_VertexInspector: gp_XY.hxx
++header BRepMesh_VertexInspector: gp_XYZ.hxx
+
++header BRepOffsetAPI_Sewing: TopoDS_Edge.hxx
++header BRepOffsetAPI_Sewing: TopoDS_Face.hxx
++header BRepOffsetAPI_Sewing: BRepTools_ReShape.hxx
 
 +header Graphic3d_ZLayerSetting: Precision.hxx
 
++header HLRAlgo_Array1OfPHDat: gp_XYZ.hxx
++header HLRAlgo_HArray1OfPHDat: gp_XYZ.hxx
+
++header IntPolyh_PMaillageAffinage: IntPolyh_Triangle.hxx
+
 +header NCollection_CellFilter_Action: gp_Pnt.hxx
++header NCollection_CellFilter_InspectorXY: gp_XYZ.hxx
++header NCollection_CellFilter_InspectorXYZ: gp_XY.hxx
+
++header OpenGl_MapOfZLayerSettings: Precision.hxx
+
++header PCDM: Storage_BaseDriver.hxx
++header PCDM_ReadWriter_1: Standard_IStream.hxx
+
++header ProjLib_PrjFunc: Adaptor3d_Surface.hxx
++header ProjLib_PrjFunc: Adaptor3d_Curve.hxx
+
++header PrsMgr_Prs: PrsMgr_Presentation.hxx
+
++header ShapeFix_Edge: TColStd_HArray1OfReal.hxx
+
++header TDocStd_XLinkIterator: TDocStd_XLink.hxx
++header TDocStd_XLinkRoot: TDocStd_XLink.hxx
+
++header TNaming_DataMapIteratorOfDataMapOfShapeMapOfShape: TopoDS_Shape.hxx
++header TNaming_DataMapOfShapePtrRefShape: TNaming_RefShape.hxx
++header TNaming_MapIteratorOfMapOfShape: TopoDS_Shape.hxx
+
++header TObj_HSequenceOfObject: TObj_Object.hxx
+
++header TopOpeBRep_DSFiller: TopOpeBRepTool_ShapeClassifier.hxx
++header TopOpeBRep_FacesFiller: TopOpeBRepTool_ShapeClassifier.hxx
++header TopOpeBRep_FFDumper: TopOpeBRep_FacesFiller.hxx
+
++header TopOpeBRepBuild_BuilderON: TopOpeBRepBuild_WireEdgeSet.hxx
++header TopOpeBRepBuild_BuilderON: TopOpeBRepBuild_GTopo.hxx
++header TopOpeBRepBuild_BuilderON: TopOpeBRepBuild_Builder.hxx
+
++header TopOpeBRepDS_FaceInterferenceTool: TopOpeBRepDS_DataStructure.hxx
++header TopOpeBRepDS_Filter: TopOpeBRepTool_ShapeClassifier.hxx
+
++header V3d_CircularGrid: V3d_Viewer.hxx
++header V3d_ListOfViewIterator: V3d_View.hxx
++header V3d_RectangularGrid: V3d_Viewer.hxx
+
++header XCAFDoc_PartId: TCollection_ExtendedString.hxx
+
++header XmlMXCAFDoc_LocationDriver: TopTools_LocationSet.hxx
 
 # Python names ----------------------------------------------------------------
 +pname NCollection_Lerp<gp_Trsf>: gp_TrsfNLerp
 
 # nodelete option -------------------------------------------------------------
++nodelete TDF_LabelNode
 
 # Sort order ------------------------------------------------------------------
 +sort TopoDS:0
@@ -56,4 +537,39 @@
 +iguard Font: Graphic3d
 
 # Excluded base classes -------------------------------------------------------
+-base Poly_BaseIteratorOfCoherentLink: NCollection_BaseVector::Iterator
+-base Poly_BaseIteratorOfCoherentNode: NCollection_BaseVector::Iterator
+-base Poly_BaseIteratorOfCoherentTriangle: NCollection_BaseVector::Iterator
+
 -base Standard_ArrayStreamBuffer: std::streambuf
+
+# Excluded fields -------------------------------------------------------------
+-field Graphic3d_CStructure::IsInfinite
+-field Graphic3d_CStructure::stick
+-field Graphic3d_CStructure::highlight
+-field Graphic3d_CStructure::visible
+-field Graphic3d_CStructure::HLRValidation
+-field Graphic3d_CStructure::IsForHighlight
+-field Graphic3d_CStructure::IsMutable
+-field Graphic3d_CStructure::Is2dText
+
+-field OpenGl_Context::core11
+-field OpenGl_Context::core11fwd
+-field OpenGl_Context::core15
+-field OpenGl_Context::core15fwd
+-field OpenGl_Context::core20
+-field OpenGl_Context::core20fwd
+-field OpenGl_Context::core32
+-field OpenGl_Context::core32back
+-field OpenGl_Context::core33
+-field OpenGl_Context::core33back
+-field OpenGl_Context::core41
+-field OpenGl_Context::core41back
+-field OpenGl_Context::core42
+-field OpenGl_Context::core42back
+-field OpenGl_Context::core43
+-field OpenGl_Context::core43back
+-field OpenGl_Context::core44
+-field OpenGl_Context::core44back
+
+-field VrmlData_InBuffer::Input

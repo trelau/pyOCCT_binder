@@ -6,7 +6,6 @@ main.process_config('config.txt')
 
 print('Parsing headers...')
 main.parse('all_includes.h')
-# main.parse('test_all_includes.h')
 main.dump_diagnostics()
 
 print('Traversing headers...')
@@ -21,6 +20,13 @@ main.build_includes()
 # print('Building imports...')
 # main.build_imports()
 #
+print('Binding templates...')
+main.bind_templates('C:/Users/Trevor/Work/Products/pyOCCT/src/include')
+
 print('Binding...')
 main.bind('C:/Users/Trevor/Work/Products/pyOCCT/src/modules')
-# main.bind()
+
+# TODO Graphic3d file in Prs3d
+# TODO Iterators
+# TODO Immutable i/o
+# TODO Import and call guards
