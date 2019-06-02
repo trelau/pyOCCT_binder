@@ -1,0 +1,22 @@
+Development Plan 05-27-2019:
+- Use latest pybind11 master
+- Review binder and clean-up
+- Get all enums binded
+- Get all functions binded
+- Get all classes NOT derived from Standard::Handle binded
+  - Start with single inheritance
+  - Then multiple inheritance
+  - Remember to check py::multiple_inheritance flag if needed
+  - Typedefs defined from these classes
+- Get immutable and reference inputs handles
+- Get circular dependency for these types handled
+- Get system to compile and run with everything except things
+  derived from Handle
+- Then start work on Handle stuff...
+
+
+Misc:
+- Rethink Deleter<> usage
+- Rethink unique_ptr implementation
+- Typename keyword for Linux in templates
+- How to handle types that get reset with "=" in implementation?

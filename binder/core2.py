@@ -67,26 +67,24 @@ class Generator(object):
 
     package_name = 'OCCT'
 
-    all_types = defaultdict(set)
-
     available_mods = set()
     available_incs = set()
     available_templates = set()
-
     excluded_classes = set()
     excluded_functions = set()
     excluded_enums = set()
     excluded_fnames = set()
     excluded_mods = set()
-    excluded_bases = dict()
     excluded_typedefs = set()
     excluded_fields = set()
     excluded_headers = set()
-
-    import_guards = dict()
-    extra_headers = dict()
-    python_names = dict()
     nodelete = set()
+
+    excluded_bases = dict()
+    import_guards = dict()
+    plus_headers = dict()
+    minus_headers = dict()
+    python_names = dict()
 
     _mods = OrderedDict()
 
@@ -112,6 +110,13 @@ class Generator(object):
         # Build available include files
         occt_incs = os.listdir(occt_include_dir)
         Generator.available_incs = set(occt_incs)
+
+        # Turn on/off binding of certain declarations for debugging
+        self.bind_enums = True
+        self.bind_functions = True
+        self.bind_classes = True
+        self.bind_typedefs = True
+        self.bind_class_templates = True
 
     @property
     def tu(self):
@@ -178,6 +183,13 @@ class Generator(object):
                     self._sort[mod] = int(loc)
                     continue
 
+                # Excluded header
+                if line.startswith('-header*'):
+                    line = line.replace('-header*', '')
+                    line = line.strip()
+                    self.excluded_headers.add(line)
+                    continue
+
                 # Excluded classes
                 if line.startswith('-class'):
                     line = line.replace('-class', '')
@@ -232,17 +244,30 @@ class Generator(object):
                         self.import_guards[mod] = {other}
                     continue
 
-                # Extra headers
+                # Plus headers
                 if line.startswith('+header'):
                     line = line.replace('+header', '')
                     line = line.strip()
                     type_, header = line.split(':')
                     type_ = type_.strip()
                     header = header.strip()
-                    if type_ in self.extra_headers:
-                        self.extra_headers[type_].append(header)
+                    if type_ in self.plus_headers:
+                        self.plus_headers[type_].append(header)
                     else:
-                        self.extra_headers[type_] = [header]
+                        self.plus_headers[type_] = [header]
+                    continue
+
+                # Minus headers
+                if line.startswith('-header'):
+                    line = line.replace('-header', '')
+                    line = line.strip()
+                    type_, header = line.split(':')
+                    type_ = type_.strip()
+                    header = header.strip()
+                    if type_ in self.minus_headers:
+                        self.minus_headers[type_].append(header)
+                    else:
+                        self.minus_headers[type_] = [header]
                     continue
 
                 # Python names
@@ -280,13 +305,6 @@ class Generator(object):
                     line = line.replace('-field', '')
                     line = line.strip()
                     self.excluded_fields.add(line)
-                    continue
-
-                # Excluded header
-                if line.startswith('-header'):
-                    line = line.replace('-header', '')
-                    line = line.strip()
-                    self.excluded_headers.add(line)
                     continue
 
     def parse(self, file_, *args):
@@ -358,6 +376,20 @@ class Generator(object):
 
         :return: None.
         """
+        # What to bind
+        to_bind = []
+        if self.bind_enums:
+            to_bind.append(CursorKind.ENUM_DECL)
+        if self.bind_functions:
+            to_bind.append(CursorKind.FUNCTION_DECL)
+        if self.bind_classes:
+            to_bind.append(CursorKind.STRUCT_DECL)
+            to_bind.append(CursorKind.CLASS_DECL)
+        if self.bind_typedefs:
+            to_bind.append(CursorKind.TYPEDEF_DECL)
+        if self.bind_class_templates:
+            to_bind.append(CursorKind.CLASS_TEMPLATE)
+
         enum_log = []
         function_log = []
         types_log = []
@@ -379,12 +411,7 @@ class Generator(object):
                 continue
 
             # Bind only these types of cursors
-            if binder.kind not in [CursorKind.CLASS_DECL,
-                                   CursorKind.STRUCT_DECL,
-                                   CursorKind.FUNCTION_DECL,
-                                   CursorKind.ENUM_DECL,
-                                   CursorKind.TYPEDEF_DECL,
-                                   CursorKind.CLASS_TEMPLATE]:
+            if binder.kind not in to_bind:
                 continue
 
             # Skip if it's a "Handle_*" definition
@@ -504,10 +531,9 @@ class Generator(object):
 
         :return: None.
         """
+        # Import module based on prefix of header files
         for mod in self.modules:
             for inc_file in mod.includes:
-                if inc_file is None:
-                    continue
                 if '_' in inc_file:
                     delim = '_'
                 else:
@@ -517,17 +543,17 @@ class Generator(object):
                 except (IndexError, AttributeError):
                     continue
 
-                other = self.get_module(other_name)
-                if not other:
+                # Check available
+                if other_name not in available_mods:
                     continue
 
                 # Don't add this module
-                if mod.name == other.name:
+                if mod.name == other_name:
                     continue
 
                 # Add import
-                if other not in mod.imports:
-                    mod.imports.append(other)
+                if other_name not in mod.imports:
+                    mod.imports.append(other_name)
 
     def sort_binders(self):
         """
@@ -669,7 +695,7 @@ class Module(object):
                 spelling2func[func.spelling] = func
                 self.sorted_binders.append(func)
 
-        # TODO Sort types
+        # Bind types
         self.sorted_binders += self.types
 
         # binders1 = list(self.classes)
@@ -826,12 +852,12 @@ class Module(object):
         guarded = set()
         if has_guards:
             guarded = Generator.import_guards[self.name]
-        for mod in self.imports:
-            if mod.name in guarded:
+        for mod_name in self.imports:
+            if mod_name in guarded:
                 continue
-            if mod.name != self.name:
+            if mod_name != self.name:
                 fout.write('py::module::import(\"{}.{}\");\n'.format(
-                    Generator.package_name, mod.name))
+                    Generator.package_name, mod_name))
         fout.write('\n')
 
         # Import guards
@@ -1490,8 +1516,8 @@ class CursorBinder(object):
 
         # Extra headers
         qname = self.qualified_name
-        if qname in Generator.extra_headers:
-            for f in Generator.extra_headers[qname]:
+        if qname in Generator.plus_headers:
+            for f in Generator.plus_headers[qname]:
                 if f not in includes:
                     includes.append(f)
 
@@ -1500,13 +1526,25 @@ class CursorBinder(object):
             if not item.is_type_ref and not item.is_template_ref:
                 continue
 
+            # Check valid file
             f = item.get_definition().filename
             if f is None:
                 continue
 
+            # Check available
             if f not in Generator.available_incs:
                 continue
 
+            # Check for excluded
+            if f in Generator.excluded_headers:
+                continue
+
+            # Check for minus
+            if qname in Generator.minus_headers:
+                if f in Generator.minus_headers[qname]:
+                    continue
+
+            # Check duplicate
             if f not in includes:
                 includes.append(f)
 
@@ -1527,9 +1565,13 @@ class CursorBinder(object):
                     qname, inc)
                 logger.write(msg)
                 inc = inc.replace('.gxx', '.hxx')
-            if (inc not in self.includes and
-                    inc not in Generator.excluded_headers):
-                self.includes.append(inc)
+
+            # Check for duplicate
+            if inc in self.includes:
+                continue
+
+            # Add include
+            self.includes.append(inc)
 
         return includes
 
@@ -1719,7 +1761,6 @@ def bind_enum(binder, path):
     # Bind function name
     python_name = binder.python_name
     # Hack for "anonymous" enums
-    # if not python_name or  python_name.startswith('(anonymous enum'):
     if not python_name or '(anonymous enum' in python_name:
         msg = '\tFound anonymous enum: {}\n'.format(binder.type.spelling)
         logger.write(msg)
@@ -1964,7 +2005,6 @@ def generate_enum(binder):
     docs = binder.docs
 
     # Cast anonymous enum to int
-    # if binder.type.spelling.startswith('(anonymous enum'):
     if '(anonymous enum' in binder.type.spelling:
         for e in binder.enum_constants:
             name, qname = e.spelling, e.qualified_name
@@ -2087,6 +2127,7 @@ def generate_class(binder):
         holder = ', opencascade::handle<{}>'.format(qname)
     elif binder.needs_nodelete or qname in Generator.nodelete:
         holder = ', std::unique_ptr<{}, py::nodelete>'.format(qname)
+    # TODO Allow for holder type in config
 
     # Excluded base classes
     base_names = []
@@ -2105,12 +2146,9 @@ def generate_class(binder):
         name = base.qualified_spelling
         name = name.replace('class ', '')
         name = name.replace('struct ', '')
-
-        if binder.python_name == 'Poly_BaseIteratorOfCoherentLink':
-            print()
-
         if name not in excluded_bases:
             base_names.append(name)
+
     if base_names:
         bases = ', ' + ', '.join(base_names)
     else:
