@@ -1,7 +1,8 @@
 # This file is part of pyOCCT_binder which automatically generates Python
 # bindings to the OpenCASCADE geometry kernel using pybind11.
 #
-# Copyright (C) 2016-2018  Laughlin Research, LLC (info@laughlinresearch.com)
+# Copyright (C) 2016-2018  Laughlin Research, LLC
+# Copyright (C) 2019 Trevor Laughlin
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,7 @@
 # TODO Unscoped enums?
 # TODO AdvApp2Var binding all kinds of stuff
 import os
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from ctypes import c_uint
 
 from binder import cymbal
@@ -85,6 +86,8 @@ class Generator(object):
     plus_headers = dict()
     minus_headers = dict()
     python_names = dict()
+    excluded_imports = dict()
+    call_guards = dict()
 
     _mods = OrderedDict()
 
@@ -306,6 +309,98 @@ class Generator(object):
                     line = line.strip()
                     self.excluded_fields.add(line)
                     continue
+
+                # Excluded imports
+                if line.startswith('-import'):
+                    line = line.replace('-import', '')
+                    line = line.strip()
+                    mod1, mod2 = line.split(':', 1)
+                    mod1 = mod1.strip()
+                    mod2 = mod2.strip()
+                    if mod1 in self.excluded_imports:
+                        self.excluded_imports[mod1].append(mod2)
+                    else:
+                        self.excluded_imports[mod1] = [mod2]
+                    continue
+
+                # Call guards
+                if line.startswith('+cguard'):
+                    line = line.replace('+cguard', '')
+                    line = line.strip()
+                    qname, mod = line.split('-->', 1)
+                    qname = qname.strip()
+                    mod = mod.strip()
+                    txt = 'py::call_guard<Import{}>()'.format(mod)
+                    if qname in self.call_guards:
+                        self.call_guards[qname].append(txt)
+                    else:
+                        self.call_guards[qname] = [txt]
+                    continue
+
+    def generate_common_header(self, path='./output/include'):
+        """
+        Generate common header file for the pyOCCT project.
+
+        :param str path: Path to write header file.
+
+        :return:
+        """
+        logger.write('Generating common header...\n')
+
+        # Create module folder
+        folder = '/'.join([path])
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+
+        fname = ''.join([path, '/', 'pyOCCT_Common.hxx'])
+        fout = open(fname, 'w')
+
+        fout.write(src_prefix)
+
+        txt = """
+#ifndef __pyOCCT_Common_Header__
+#define __pyOCCT_Common_Header__
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+
+#include <Standard_Handle.hxx>
+
+namespace py = pybind11;
+
+// Use opencascade::handle as holder type for Standard_Transient types
+PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
+
+// Deleter template for mixed holder types with public/hidden destructors
+template<typename T> struct Deleter { void operator() (T *o) const { delete o; } };
+"""
+
+        fout.write(txt)
+
+        # Call guards
+        if self.import_guards:
+            fout.write('\n// Call guards')
+        used_mods = set()
+        for key in self.import_guards:
+            for mod in self.import_guards[key]:
+                if mod in used_mods:
+                    continue
+                used_mods.add(mod)
+                fout.write('\n')
+
+                fout.write('struct Import{}{{\n'.format(mod))
+                fout.write(
+                    '\tImport{}() {{ py::module::import(\"{}.{}\"); }}\n'.format(
+                        mod, Generator.package_name, mod))
+                fout.write('};\n')
+        if self.import_guards:
+            fout.write('\n')
+
+        fout.write('#endif\n')
+        fout.close()
+
+        logger.write('done.\n\n')
 
     def parse(self, file_, *args):
         """
@@ -550,6 +645,11 @@ class Generator(object):
                 # Don't add this module
                 if mod.name == other_name:
                     continue
+
+                # Check excluded
+                if mod.name in Generator.excluded_imports:
+                    if other_name in Generator.excluded_imports[mod.name]:
+                        continue
 
                 # Add import
                 if other_name not in mod.imports:
@@ -860,13 +960,13 @@ class Module(object):
                     Generator.package_name, mod_name))
         fout.write('\n')
 
-        # Import guards
-        for mod_name in guarded:
-            fout.write('struct Import{}{{\n'.format(mod_name))
-            fout.write(
-                '\tImport{}() {{ py::module::import(\"{}.{}\"); }}\n'.format(
-                    mod_name, Generator.package_name, mod_name))
-            fout.write('};\n\n')
+        # Import guards (put in common header)
+        # for mod_name in guarded:
+        #     fout.write('struct Import{}{{\n'.format(mod_name))
+        #     fout.write(
+        #         '\tImport{}() {{ py::module::import(\"{}.{}\"); }}\n'.format(
+        #             mod_name, Generator.package_name, mod_name))
+        #     fout.write('};\n\n')
 
         # Call bind functions
         for binder in binders:
@@ -1204,8 +1304,11 @@ class CursorBinder(object):
             from it.
         :rtype: bool
         """
-        return (self.spelling == 'Standard_Transient' or
-                self.is_derived_from('Standard_Transient'))
+        try:
+            return (self.spelling == 'Standard_Transient' or
+                    self.is_derived_from('Standard_Transient'))
+        except AttributeError:
+            return False
 
     @property
     def is_operator(self):
@@ -1224,8 +1327,6 @@ class CursorBinder(object):
         parent = self.parent
         if parent.is_tu:
             return False
-        # if parent.is_class or parent.is_class_template:
-        #     return True
         return True
 
     @property
@@ -1386,6 +1487,15 @@ class CursorBinder(object):
         return self.get_children_of_kind(CursorKind.CXX_METHOD)
 
     @property
+    def nested_classes(self):
+        """
+        :return: List of nested classes.
+        :rtype: list(binder.core.CursorBinder)
+        """
+        return (self.get_children_of_kind(CursorKind.CLASS_DECL) +
+                self.get_children_of_kind(CursorKind.STRUCT_DECL))
+
+    @property
     def parameters(self):
         """
         :return: List of parameters.
@@ -1441,6 +1551,16 @@ class CursorBinder(object):
             if not dtor.is_public:
                 return True
         return False
+
+    @property
+    def holder_type(self):
+        """
+        :return: The primary holder type.
+        :rtype: str
+        """
+        if self.is_transient:
+            return 'opencascade::handle'
+        return 'std::unique_ptr'
 
     def get_definition(self):
         """
@@ -2102,7 +2222,7 @@ def generate_class(binder):
     """
     Generate source for class.
 
-    :param binder.core.CursorBinder binder: The binder.
+    :param binder.core2.CursorBinder binder: The binder.
 
     :return: Binder source as a list of lines.
     :rtype: list(str)
@@ -2122,12 +2242,12 @@ def generate_class(binder):
     cls = '_'.join(['cls', name])
 
     # Holder
-    holder = ''
     if binder.is_transient:
         holder = ', opencascade::handle<{}>'.format(qname)
     elif binder.needs_nodelete or qname in Generator.nodelete:
         holder = ', std::unique_ptr<{}, py::nodelete>'.format(qname)
-    # TODO Allow for holder type in config
+    else:
+        holder = ', std::unique_ptr<{}, Deleter<{}>>'.format(qname, qname)
 
     # Excluded base classes
     base_names = []
@@ -2146,17 +2266,21 @@ def generate_class(binder):
         name = base.qualified_spelling
         name = name.replace('class ', '')
         name = name.replace('struct ', '')
-        if name not in excluded_bases:
-            base_names.append(name)
+        if name in excluded_bases or name in Generator.excluded_classes:
+            continue
+        # Check to see if type uses same holder type
+        if binder.holder_type != base.get_definition().holder_type:
+            continue
+        base_names.append(name)
 
     if base_names:
         bases = ', ' + ', '.join(base_names)
     else:
         bases = ''
 
-    # Figure out if py::multiple_inheritance is needed
+    # Check py::multiple_inheritance
     multi_base = ''
-    if len(bases_classes) > 1 >= len(base_names):
+    if len(bases_classes) > 1 and (len(base_names) < len(bases_classes)):
         multi_base = ', py::multiple_inheritance()'
 
     # Name will be given if binding a class template
@@ -2167,11 +2291,17 @@ def generate_class(binder):
     if qname in Generator.python_names:
         name_ = '\"{}\"'.format(Generator.python_names[qname])
 
+    # #TODO Module or parent name for nested classes
+    parent = 'mod'
+    # if binder.is_nested:
+    #     parent = 'cls_' + binder.parent.python_name
+
     # Source
-    src = ['py::class_<{}{}{}> {}(mod, {}, \"{}\"{});\n'.format(qname, holder,
-                                                                bases, cls,
-                                                                name_, docs,
-                                                                multi_base)]
+    src = ['py::class_<{}{}{}> {}({}, {}, \"{}\"{});\n'.format(qname, holder,
+                                                               bases, cls,
+                                                               parent,
+                                                               name_, docs,
+                                                               multi_base)]
 
     # Constructors
     if not binder.is_abstract:
@@ -2202,6 +2332,14 @@ def generate_class(binder):
         if item.is_public:
             item.parent_name = cls
             src += generate_enum(item)
+
+    # TODO Nested classes
+    # nested_classes = binder.nested_classes
+    # if nested_classes:
+    #     src.append('\n// Nested classes\n')
+    #     for nested in nested_classes:
+    #         if nested.is_public:
+    #             src += generate_class(nested)
 
     # Comment if excluded
     if binder.is_excluded:
@@ -2332,6 +2470,11 @@ def generate_method(binder):
     sig = function_signature(binder)
     nargs, ndefaults, args_name, args_type, defaults, is_array_like = sig
 
+    # Call guards
+    cguards = ''
+    if qname in Generator.call_guards:
+        cguards = ', ' + ', '.join(Generator.call_guards[qname])
+
     for i in range(nargs - ndefaults, nargs + 1):
         if i == nargs:
             names = args_name[0:i]
@@ -2344,12 +2487,12 @@ def generate_method(binder):
                 py_args.append(', py::arg(\"{}\")'.format(name))
             py_args = ''.join(py_args)
 
-            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{});\n'.format(
+            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{});\n'.format(
                 prefix, is_static,
                 fname, rtype, ptr,
                 signature, is_const,
                 qname, is_operator,
-                docs, py_args)
+                docs, py_args, cguards)
 
         else:
             arg_list = []
@@ -2383,8 +2526,9 @@ def generate_method(binder):
             else:
                 qname_ = qname
 
-            src = '{}.def{}(\"{}\", []({}) -> {} {{ return {}({}); }});\n'.format(
-                prefix, is_static, fname, signature, rtype, qname_, call)
+            src = '{}.def{}(\"{}\", []({}) -> {} {{ return {}({}); }}{});\n'.format(
+                prefix, is_static, fname, signature, rtype, qname_, call,
+                cguards)
 
         if True in is_array_like:
             src = ' '.join(['//', src])

@@ -1,22 +1,23 @@
 Development Plan 05-27-2019:
-- Use latest pybind11 master
-- Review binder and clean-up
-- Get all enums binded
-- Get all functions binded
-- Get all classes NOT derived from Standard::Handle binded
-  - Start with single inheritance
-  - Then multiple inheritance
-  - Remember to check py::multiple_inheritance flag if needed
-  - Typedefs defined from these classes
-- Get immutable and reference inputs handles
-- Get circular dependency for these types handled
-- Get system to compile and run with everything except things
-  derived from Handle
-- Then start work on Handle stuff...
-
+- Use latest pybind11 master (done)
+- Review binder and clean-up (done)
+- Bind enums (done)
+- Bind functions (done)
+- Bind types NOT derived from Standard_Transient (done)
+- Bind types derived from Standard_Transient (done)
+- Bind typedefs (done)
+- Bind class templates (done)
+- Immutable inputs
+- Circular dependency
+- Call guards
+- Iterators
+- Nested classes like NCollection_BaseList::Iterator
 
 Misc:
 - Rethink Deleter<> usage
 - Rethink unique_ptr implementation
 - Typename keyword for Linux in templates
 - How to handle types that get reset with "=" in implementation?
+- Exclude base types with different holders?
+- Exclude NCollection_BaseList::Iterator as base?
+- Exclude opencascade::handle<Standard_Transient> as base?

@@ -41,6 +41,8 @@
 -class ShapePersistent_Poly
 -class ShapePersistent_TopoDS
 
+-class Standard_ErrorHandler::Callback
+
 -class StdStorage_Bucket
 -class StdStorage_BucketIterator
 -class StdStorage_BucketOfPersistent
@@ -537,14 +539,11 @@
 # nodelete option -------------------------------------------------------------
 +nodelete TDF_LabelNode
 
-# Import guards ---------------------------------------------------------------
-# +iguard Font: Graphic3d
-
 # Excluded base classes -------------------------------------------------------
--base Poly_BaseIteratorOfCoherentLink: NCollection_BaseVector::Iterator
--base Poly_BaseIteratorOfCoherentNode: NCollection_BaseVector::Iterator
--base Poly_BaseIteratorOfCoherentTriangle: NCollection_BaseVector::Iterator
-
+# -base Poly_BaseIteratorOfCoherentLink: NCollection_BaseVector::Iterator
+# -base Poly_BaseIteratorOfCoherentNode: NCollection_BaseVector::Iterator
+# -base Poly_BaseIteratorOfCoherentTriangle: NCollection_BaseVector::Iterator
+-base NCollection_Handle<T>: opencascade::handle<Standard_Transient>
 -base Standard_ArrayStreamBuffer: std::streambuf
 
 # Excluded fields -------------------------------------------------------------
@@ -577,3 +576,13 @@
 -field OpenGl_Context::core44back
 
 -field VrmlData_InBuffer::Input
+
+# Excluded imports ------------------------------------------------------------
+-import NCollection: gp
+
+# Import guards ---------------------------------------------------------------
++iguard Font: Graphic3d
+
+# Call guards -----------------------------------------------------------------
++cguard Font_TextFormatter::SetupAlignment-->Graphic3d
++cguard Font_BRepTextBuilder::Perform-->Graphic3d
