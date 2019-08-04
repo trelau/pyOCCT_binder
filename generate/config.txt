@@ -540,9 +540,9 @@
 +nodelete TDF_LabelNode
 
 # Excluded base classes -------------------------------------------------------
-# -base Poly_BaseIteratorOfCoherentLink: NCollection_BaseVector::Iterator
-# -base Poly_BaseIteratorOfCoherentNode: NCollection_BaseVector::Iterator
-# -base Poly_BaseIteratorOfCoherentTriangle: NCollection_BaseVector::Iterator
+-base Poly_BaseIteratorOfCoherentLink: NCollection_BaseVector::Iterator
+-base Poly_BaseIteratorOfCoherentNode: NCollection_BaseVector::Iterator
+-base Poly_BaseIteratorOfCoherentTriangle: NCollection_BaseVector::Iterator
 -base NCollection_Handle<T>: opencascade::handle<Standard_Transient>
 -base Standard_ArrayStreamBuffer: std::streambuf
 
@@ -578,11 +578,35 @@
 -field VrmlData_InBuffer::Input
 
 # Excluded imports ------------------------------------------------------------
+-import Geom: GeomEvaluator
+-import Geom2d: Geom2dEvaluator
+-import GeomAdaptor: GeomEvaluator
+-import Geom2dAdaptor: Geom2dEvaluator
 -import NCollection: gp
+-import StdObj: StdPersistent
+-import StdObj: ShapePersistent
+-import StdPersistent: ShapePersistent
+-import XCAFDimTolObjects: XCAFDoc
 
 # Import guards ---------------------------------------------------------------
 +iguard Font: Graphic3d
++iguard LDOMBasicString: LDOM
++iguard LDOMString: LDOM
++iguard LDOMParser: LDOM
++iguard SelectBasics: Select3D
++iguard StepRepr: StepShape
 
 # Call guards -----------------------------------------------------------------
 +cguard Font_TextFormatter::SetupAlignment-->Graphic3d
 +cguard Font_BRepTextBuilder::Perform-->Graphic3d
++cguard LDOMBasicString::LDOMBasicString-->LDOM
++cguard LDOMString::getOwnerDocument-->LDOM
++cguard LDOMParser::getDocument-->LDOM
++cguard SelectBasics_SensitiveEntity::BoundingBox-->Select3D
++cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI-->StepShape
++cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI::SetQualifiedRepresentationItem-->StepShape
++cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI::GetQualifiedRepresentationItem-->StepShape
+
+# Nested classes --------------------------------------------------------------
++nested NCollection_BaseList::Iterator
++nested NCollection_BaseMap::Iterator

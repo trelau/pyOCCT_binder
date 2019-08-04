@@ -80,6 +80,7 @@ class Generator(object):
     excluded_fields = set()
     excluded_headers = set()
     nodelete = set()
+    nested_classes = set()
 
     excluded_bases = dict()
     import_guards = dict()
@@ -337,6 +338,13 @@ class Generator(object):
                         self.call_guards[qname] = [txt]
                     continue
 
+                # Nested classes
+                if line.startswith('+nested'):
+                    line = line.replace('+nested', '')
+                    line = line.strip()
+                    self.nested_classes.add(line)
+                    continue
+
     def generate_common_header(self, path='./output/include'):
         """
         Generate common header file for the pyOCCT project.
@@ -500,7 +508,8 @@ template<typename T> struct Deleter { void operator() (T *o) const { delete o; }
 
         logger.write('Traversing...\n')
         # Traverse the translation unit and group the binders into modules
-        for binder in self.tu_binder.get_children():
+        binders = self.tu_binder.get_children()
+        for binder in binders:
             # Only bind definitions
             if not binder.is_definition:
                 continue
@@ -704,6 +713,22 @@ template<typename T> struct Deleter { void operator() (T *o) const { delete o; }
         """
         return name in self._mods
 
+    def check_circular(self):
+        """
+        Check for circular imports.
+
+        :return: None.
+        """
+        logger.write('Finding circular imports...\n')
+        mods = self.modules
+        for i, mod1 in enumerate(mods):
+            for mod2 in mods[i + 1:-1]:
+                if mod1.is_circular(mod2):
+                    name1, name2 = mod1.name, mod2.name
+                    msg = '\tFound circular import: {} <--> {}\n'.format(name1,
+                                                                         name2)
+                    logger.write(msg)
+
     @classmethod
     def get_module(cls, name):
         """
@@ -870,13 +895,14 @@ class Module(object):
 
         visited, stack = set(), list(self.imports)
         while stack:
-            mod = stack.pop()
-            if mod in visited:
+            mod_name = stack.pop(0)
+            if mod_name in visited:
                 continue
-            visited.add(mod)
-            if mod.name == other.name:
+            visited.add(mod_name)
+            if mod_name == other.name:
                 return True
-            stack += list(mod.imports)
+            mod = Generator.get_module(mod_name)
+            stack = list(mod.imports) + stack
         return False
 
     def is_circular(self, other):
@@ -1383,10 +1409,13 @@ class CursorBinder(object):
         """
         if self._pname is not None:
             return self._pname
-        name = self.qualified_spelling
+        if self.is_nested:
+            name = self.spelling
+        else:
+            name = self.qualified_spelling
         name = name.replace('::', '_')
-        name = name.replace('::', '<')
-        name = name.replace('::', '>')
+        # name = name.replace('::', '<')
+        # name = name.replace('::', '>')
         return name
 
     @python_name.setter
@@ -1588,7 +1617,7 @@ class CursorBinder(object):
         Get children of binder.
 
         :return: The children.
-        :rtype: list(binder.core.CursorBinder)
+        :rtype: list(binder.core2.CursorBinder)
         """
         children = []
         for child in self.cursor.get_children():
@@ -2291,10 +2320,10 @@ def generate_class(binder):
     if qname in Generator.python_names:
         name_ = '\"{}\"'.format(Generator.python_names[qname])
 
-    # #TODO Module or parent name for nested classes
+    # Module or parent name for nested classes
     parent = 'mod'
-    # if binder.is_nested:
-    #     parent = 'cls_' + binder.parent.python_name
+    if binder.is_nested and qname in Generator.nested_classes:
+        parent = 'cls_' + binder.parent.python_name
 
     # Source
     src = ['py::class_<{}{}{}> {}({}, {}, \"{}\"{});\n'.format(qname, holder,
@@ -2333,13 +2362,18 @@ def generate_class(binder):
             item.parent_name = cls
             src += generate_enum(item)
 
-    # TODO Nested classes
-    # nested_classes = binder.nested_classes
-    # if nested_classes:
-    #     src.append('\n// Nested classes\n')
-    #     for nested in nested_classes:
-    #         if nested.is_public:
-    #             src += generate_class(nested)
+    # Nested classes
+    has_nested = False
+    nested_classes = binder.nested_classes
+    for nested in nested_classes:
+        if nested.qualified_name not in Generator.nested_classes:
+            continue
+        if not nested.is_public:
+            continue
+        if not has_nested:
+            src.append('\n// Nested classes\n')
+            has_nested = True
+        src += generate_class(nested)
 
     # Comment if excluded
     if binder.is_excluded:
@@ -2551,6 +2585,11 @@ def generate_typedef(binder):
     alias = binder.alias
     this_module = binder.module_name
     if alias is not None:
+        # Only bind if alias is a record
+        if not alias.type.get_canonical().is_record:
+            logger.write(
+                '\tNot binding typedef: {}\n'.format(binder.python_name))
+            return [], [], []
         other_mod = alias.module_name
         if other_mod == this_module:
             src = [
