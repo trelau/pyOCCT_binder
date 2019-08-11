@@ -9,6 +9,12 @@
 +arg -Wno-deprecated-declarations
 +arg -fdelayed-template-parsing
 
+# Immutable types -------------------------------------------------------------
++immutable Standard_Boolean
++immutable Standard_CString
++immutable Standard_Integer
++immutable Standard_Real
+
 # Excluded classes ------------------------------------------------------------
 -class Cocoa_LocalPool
 

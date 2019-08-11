@@ -82,6 +82,7 @@ class Generator(object):
     nodelete = set()
     nested_classes = set()
     skipped = set()
+    immutable = set()
 
     excluded_bases = dict()
     import_guards = dict()
@@ -365,6 +366,13 @@ class Generator(object):
                         self.manual[qname].append(txt)
                     else:
                         self.manual[qname] = [txt]
+                    continue
+
+                # Skipped binders
+                if line.startswith('+immutable'):
+                    line = line.replace('+immutable', '')
+                    line = line.strip()
+                    self.immutable.add(line)
                     continue
 
     def generate_common_header(self, path='./output/include'):
@@ -1389,6 +1397,17 @@ class CursorBinder(object):
         return True
 
     @property
+    def is_immutable(self):
+        """
+        :return: Check if the type is a Python immutable type.
+        :rtype: bool
+        """
+        type_ = self.type
+        if type_.is_pointer_like:
+            type_ = type_.get_pointee()
+        return type_.spelling in Generator.immutable
+
+    @property
     def is_maybe_iterable(self):
         """
         :return: Check to see if the type is maybe iterable (has begin and end
@@ -1643,6 +1662,18 @@ class CursorBinder(object):
         if self.is_transient:
             return 'opencascade::handle'
         return 'std::unique_ptr'
+
+    @property
+    def needs_inout_method(self):
+        """
+        :return: Check to see if the function should use a lambda to return
+            non const immutable types.
+        :rtype: bool
+        """
+        for a in self.parameters:
+            if a.is_immutable and not a.type.is_const_qualified:
+                return True
+        return False
 
     def get_definition(self):
         """
@@ -2532,8 +2563,6 @@ def generate_method(binder):
     :return: Binder source as a list of lines.
     :rtype: list(str)
     """
-    # TODO Call guards, using declarations, immutable types, lambdas
-
     methods = []
 
     prefix = '{}'.format(binder.parent_name)
@@ -2547,9 +2576,8 @@ def generate_method(binder):
     if is_static:
         fname += '_'
 
-    # Comment if excluded or returns a pointer
-    # TODO How to handle pointers?
-    if binder.is_excluded:  # or binder.rtype.is_pointer:
+    # Comment if excluded
+    if binder.is_excluded:
         prefix = '// {}'.format(prefix)
 
     rtype = binder.rtype.spelling
@@ -2570,7 +2598,6 @@ def generate_method(binder):
     is_operator = ''
     if binder.is_operator:
         fname = py_operators[fname]
-        # if '__i' not in name:
         is_operator = 'py::is_operator(), '
 
     sig = function_signature(binder)
@@ -2636,6 +2663,7 @@ def generate_method(binder):
                 prefix, is_static, fname, signature, rtype, qname_, call,
                 cguards)
 
+        # TODO How to handle arrays?
         if True in is_array_like:
             src = ' '.join(['//', src])
 
