@@ -7,17 +7,11 @@ Development Plan 05-27-2019:
 - Bind types derived from Standard_Transient (done)
 - Bind typedefs (done)
 - Bind class templates (done)
+- Circular dependency (done)
+- Call guards (done)
 - Immutable inputs
-- Circular dependency
-- Call guards
 - Iterators
-- Nested classes like NCollection_BaseList::Iterator
 
-Misc:
-- Rethink Deleter<> usage
-- Rethink unique_ptr implementation
-- Typename keyword for Linux in templates
+Issues:
+- Make is_transient more robust
 - How to handle types that get reset with "=" in implementation?
-- Exclude base types with different holders?
-- Exclude NCollection_BaseList::Iterator as base?
-- Exclude opencascade::handle<Standard_Transient> as base?

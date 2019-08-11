@@ -81,6 +81,7 @@ class Generator(object):
     excluded_headers = set()
     nodelete = set()
     nested_classes = set()
+    skipped = set()
 
     excluded_bases = dict()
     import_guards = dict()
@@ -89,6 +90,7 @@ class Generator(object):
     python_names = dict()
     excluded_imports = dict()
     call_guards = dict()
+    manual = dict()
 
     _mods = OrderedDict()
 
@@ -278,7 +280,7 @@ class Generator(object):
                 if line.startswith('+pname'):
                     line = line.replace('+pname', '')
                     line = line.strip()
-                    type_, name = line.split(':')
+                    type_, name = line.split('-->', 1)
                     type_ = type_.strip()
                     name = name.strip()
                     self.python_names[type_] = name
@@ -343,6 +345,26 @@ class Generator(object):
                     line = line.replace('+nested', '')
                     line = line.strip()
                     self.nested_classes.add(line)
+                    continue
+
+                # Skipped binders
+                if line.startswith('+skip'):
+                    line = line.replace('+skip', '')
+                    line = line.strip()
+                    self.skipped.add(line)
+                    continue
+
+                # Manual text
+                if line.startswith('+manual'):
+                    line = line.replace('+manual', '')
+                    line = line.strip()
+                    qname, txt = line.split('-->', 1)
+                    qname = qname.strip()
+                    txt = txt.strip()
+                    if qname in self.manual:
+                        self.manual[qname].append(txt)
+                    else:
+                        self.manual[qname] = [txt]
                     continue
 
     def generate_common_header(self, path='./output/include'):
@@ -511,7 +533,8 @@ template<typename T> struct Deleter { void operator() (T *o) const { delete o; }
         binders = self.tu_binder.get_children()
         for binder in binders:
             # Only bind definitions
-            if not binder.is_definition:
+            # TODO Why is IGESFile not considered a definition?
+            if not binder.is_definition and not binder.spelling.startswith('IGESFile'):
                 continue
 
             # Bind only these types of cursors
@@ -542,6 +565,13 @@ template<typename T> struct Deleter { void operator() (T *o) const { delete o; }
                 continue
 
             qname = binder.qualified_name
+
+            # Skip if specified
+            if qname in self.skipped:
+                msg = '\tSkipping {}.\n'.format(binder.type.spelling)
+                logger.write(msg)
+                continue
+
             if not qname:
                 msg = '\tNo qualified name. Skipping {}.\n'.format(
                     binder.type.spelling
@@ -1330,11 +1360,14 @@ class CursorBinder(object):
             from it.
         :rtype: bool
         """
-        try:
-            return (self.spelling == 'Standard_Transient' or
-                    self.is_derived_from('Standard_Transient'))
-        except AttributeError:
-            return False
+        # TODO Make is_transient more robust
+        if self.type.spelling == 'Standard_Transient':
+            return True
+        bases = self._all_bases
+        for base in bases:
+            if base.type.spelling == 'Standard_Transient':
+                return True
+        return False
 
     @property
     def is_operator(self):
@@ -1450,7 +1483,7 @@ class CursorBinder(object):
         return self.get_children_of_kind(CursorKind.CXX_BASE_SPECIFIER)
 
     @property
-    def all_bases(self):
+    def _all_bases(self):
         """
         :return: All base classes.
         :rtype: list(binder.core.CursorBinder)
@@ -1460,7 +1493,12 @@ class CursorBinder(object):
             for base in _c.bases:
                 bases.append(base)
                 _c = base.type.get_declaration()
-                _get_bases(_c)
+                # Check for a template
+                _s = _c.get_specialization()
+                if not _s.no_decl and _s.is_class_template:
+                    _get_bases(_s)
+                else:
+                    _get_bases(_c)
 
         bases = []
         _get_bases(self)
@@ -1724,26 +1762,6 @@ class CursorBinder(object):
 
         return includes
 
-    def is_derived_from(self, name):
-        """
-        Check to see if this binder is derived from the named type.
-
-        :param str name: The base name.
-
-        :return: *True* if derived from base, *False* otherwise.
-        :rtype: bool
-        """
-        bases = self.all_bases
-        for base in bases:
-            # Hack in case base is a template
-            try:
-                base_spelling = base.get_definition().spelling
-            except AttributeError:
-                base_spelling = base.spelling
-            if base_spelling == name:
-                return True
-        return False
-
     def bind(self, path):
         """
         Bind the type.
@@ -1778,7 +1796,7 @@ class CursorBinder(object):
         elif self.is_class:
             return generate_class(self)
         elif self.is_typedef:
-            return generate_typedef(self)
+            return generate_typedef2(self)
         elif self.is_class_template:
             return generate_class_template(self)
         elif self.is_cxx_method:
@@ -2020,6 +2038,7 @@ def bind_class(binder, path):
     fname = ''.join([path, '/', bind_name, '.cxx'])
     fout = open(fname, 'w')
     fout.write(src_prefix)
+
     fout.writelines(src)
 
 
@@ -2046,7 +2065,7 @@ def bind_typedef(binder, path):
     src = ['void {}(py::module &mod){{\n\n'.format(bind_name)]
 
     # Generate source
-    other_src, bind_template, extra = generate_typedef(binder)
+    other_src, bind_template, extra = generate_typedef2(binder)
 
     # Comment if excluded
     if binder.is_excluded:
@@ -2117,7 +2136,7 @@ def bind_class_template(binder, path):
 
     # Bind function
     src.append(
-        'void {}(py::module &mod, std::string const &name){{\n\n'.format(
+        'void {}(py::module &mod, std::string const &name, py::module_local const &local){{\n\n'.format(
             bind_name))
 
     # Generate source
@@ -2153,6 +2172,10 @@ def generate_enum(binder):
     parent = binder.parent_name
     docs = binder.docs
 
+    name = binder.python_name
+    if qname in Generator.python_names:
+        name = Generator.python_names[qname]
+
     # Cast anonymous enum to int
     if '(anonymous enum' in binder.type.spelling:
         for e in binder.enum_constants:
@@ -2168,7 +2191,6 @@ def generate_enum(binder):
                                                                   qname)
             src.append(txt)
     else:
-        name = binder.python_name
         # Hack for missing name
         if not name:
             name = binder.type.spelling
@@ -2273,10 +2295,13 @@ def generate_class(binder):
     # Holder
     if binder.is_transient:
         holder = ', opencascade::handle<{}>'.format(qname)
+        holder_type = 'opencascade::handle'
     elif binder.needs_nodelete or qname in Generator.nodelete:
         holder = ', std::unique_ptr<{}, py::nodelete>'.format(qname)
+        holder_type = 'std::unique_ptr'
     else:
         holder = ', std::unique_ptr<{}, Deleter<{}>>'.format(qname, qname)
+        holder_type = 'std::unique_ptr'
 
     # Excluded base classes
     base_names = []
@@ -2292,13 +2317,22 @@ def generate_class(binder):
     for base in bases_classes:
         if not base.is_public:
             continue
-        name = base.qualified_spelling
-        name = name.replace('class ', '')
-        name = name.replace('struct ', '')
+        name = base.type.spelling
         if name in excluded_bases or name in Generator.excluded_classes:
             continue
+        # Get the underlying specialization if a template to check for
+        # holder type
+        _base = base.type.get_declaration().get_specialization()
+        if not _base.no_decl:
+            base_holder_type = _base.holder_type
+        else:
+            base_holder_type = base.type.get_declaration().holder_type
         # Check to see if type uses same holder type
-        if binder.holder_type != base.get_definition().holder_type:
+        if holder_type != base_holder_type:
+            msg = '\tMismatched holder types: {} --> {}\n'.format(
+                binder.spelling, name
+            )
+            logger.write(msg)
             continue
         base_names.append(name)
 
@@ -2325,12 +2359,20 @@ def generate_class(binder):
     if binder.is_nested and qname in Generator.nested_classes:
         parent = 'cls_' + binder.parent.python_name
 
+    # Use py::module_local() for aliases
+    local = ''
+    if binder.is_class_template or binder.parent.is_class_template:
+        local = ', local'
+    elif binder.alias is not None:
+        local = ', py::module_local()'
+
     # Source
-    src = ['py::class_<{}{}{}> {}({}, {}, \"{}\"{});\n'.format(qname, holder,
-                                                               bases, cls,
-                                                               parent,
-                                                               name_, docs,
-                                                               multi_base)]
+    src = ['py::class_<{}{}{}> {}({}, {}, \"{}\"{}{});\n'.format(qname, holder,
+                                                                 bases, cls,
+                                                                 parent,
+                                                                 name_, docs,
+                                                                 multi_base,
+                                                                 local)]
 
     # Constructors
     if not binder.is_abstract:
@@ -2374,6 +2416,14 @@ def generate_class(binder):
             src.append('\n// Nested classes\n')
             has_nested = True
         src += generate_class(nested)
+
+    # Manual text before class_
+    if qname in Generator.manual:
+        i = 0
+        for txt in Generator.manual[qname]:
+            src.insert(i, txt)
+            i += 1
+        src.insert(i, '\n\n')
 
     # Comment if excluded
     if binder.is_excluded:
@@ -2625,6 +2675,57 @@ def generate_typedef(binder):
             src = ['bind_{}({}, \"{}\");\n'.format(type_.spelling,
                                                    binder.parent_name,
                                                    binder.python_name)]
+            return src, ['bind_{}'.format(decl.spelling)], []
+
+    elif type_.is_record and decl.is_class:
+        decl.python_name = binder.spelling
+        src = generate_class(decl)
+        return src, [], []
+
+    logger.write(
+        '\tNot binding typedef: {}\n'.format(binder.python_name))
+    return [], [], []
+
+
+def generate_typedef2(binder):
+    """
+    Generate source for a typedef.
+
+    :param binder.core.CursorBinder binder: The binder.
+
+    :return: Binder source as a list of lines and extra headers if needed.
+    :rtype: tuple(list(str), list(str))
+    """
+    # Bind an alias in the same module
+    alias = binder.alias
+    if alias is not None and binder.module_name == alias.module_name:
+        src = [
+            'if (py::hasattr(mod, \"{}\")) {{\n'.format(alias.python_name),
+            '\tmod.attr(\"{}\") = mod.attr(\"{}\");\n'.format(
+                binder.python_name, alias.python_name),
+            '}\n'
+        ]
+        return src, None, []
+
+    # Bind class
+    type_ = binder.type.get_canonical()
+    decl = type_.get_declaration()
+    template = decl.get_specialization()
+    decl.alias = alias
+    local = ', py::module_local(false)'
+    if alias is not None:
+        local = ', py::module_local()'
+    if type_.is_record and template.is_class_template:
+        if type_.spelling.startswith('std::vector'):
+            txt = type_.spelling, binder.parent_name, binder.python_name
+            src = ['py::bind_vector<{}>({}, \"{}\");\n'.format(*txt)]
+            extra = ['PYBIND11_MAKE_OPAQUE({})\n\n'.format(txt[0])]
+            return src, [], extra
+        else:
+            src = ['bind_{}({}, \"{}\"{});\n'.format(type_.spelling,
+                                                     binder.parent_name,
+                                                     binder.python_name,
+                                                     local)]
             return src, ['bind_{}'.format(decl.spelling)], []
 
     elif type_.is_record and decl.is_class:

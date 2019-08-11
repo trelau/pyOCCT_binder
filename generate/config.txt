@@ -66,7 +66,10 @@
 -typedef Graphic3d_IndexedMapOfAddress
 -typedef Graphic3d_NMapOfTransient
 
+-typedef IntSurf_Allocator
+
 -typedef MeshVS_TwoColors
+-typedef MeshVS_NodePair
 
 -typedef QuadBvhHandle
 -typedef OpenGl_ListOfStructure
@@ -457,6 +460,62 @@
 
 +header BRepAlgoAPI_BuilderAlgo: BOPAlgo_Builder.hxx
 
++header BRepBlend_Chamfer: math_Matrix.hxx
++header BRepBlend_Chamfer: gp_Lin.hxx
++header BRepBlend_Chamfer: Blend_Point.hxx
++header BRepBlend_Chamfer: Adaptor3d_HSurface.hxx
++header BRepBlend_Chamfer: Adaptor3d_HCurve.hxx
++header BRepBlend_ChamfInv: Adaptor2d_HCurve2d.hxx
++header BRepBlend_ChamfInv: math_Matrix.hxx
++header BRepBlend_ChamfInv: Adaptor3d_HSurface.hxx
++header BRepBlend_ChamfInv: Adaptor3d_HCurve.hxx
++header BRepBlend_ChAsym: gp_Lin.hxx
++header BRepBlend_ChAsym: Blend_Point.hxx
++header BRepBlend_ChAsym: Adaptor3d_HSurface.hxx
++header BRepBlend_ChAsym: Adaptor3d_HCurve.hxx
++header BRepBlend_ChAsymInv: Adaptor2d_HCurve2d.hxx
++header BRepBlend_ChAsymInv: Adaptor3d_HSurface.hxx
++header BRepBlend_ChAsymInv: Adaptor3d_HCurve.hxx
++header BRepBlend_ConstRad: gp_Ax1.hxx
++header BRepBlend_ConstRad: gp_Circ.hxx
++header BRepBlend_ConstRad: Blend_Point.hxx
++header BRepBlend_ConstRad: Adaptor3d_HSurface.hxx
++header BRepBlend_ConstRad: Adaptor3d_HCurve.hxx
++header BRepBlend_ConstRadInv: Adaptor2d_HCurve2d.hxx
++header BRepBlend_ConstRadInv: math_Matrix.hxx
++header BRepBlend_ConstRadInv: Adaptor3d_HSurface.hxx
++header BRepBlend_ConstRadInv: Adaptor3d_HCurve.hxx
++header BRepBlend_CSCircular: math_Matrix.hxx
++header BRepBlend_CSCircular: gp_Circ.hxx
++header BRepBlend_CSCircular: Blend_Point.hxx
++header BRepBlend_CSCircular: Adaptor3d_HSurface.hxx
++header BRepBlend_CSCircular: Adaptor3d_HCurve.hxx
++header BRepBlend_CSCircular: Law_Function.hxx
++header BRepBlend_CSConstRad: math_Matrix.hxx
++header BRepBlend_CSConstRad: gp_Circ.hxx
++header BRepBlend_CSConstRad: Blend_Point.hxx
++header BRepBlend_CSConstRad: Adaptor3d_HSurface.hxx
++header BRepBlend_CSConstRad: Adaptor3d_HCurve.hxx
++header BRepBlend_EvolRad: gp_Circ.hxx
++header BRepBlend_EvolRad: Blend_Point.hxx
++header BRepBlend_EvolRad: Adaptor3d_HSurface.hxx
++header BRepBlend_EvolRad: Adaptor3d_HCurve.hxx
++header BRepBlend_EvolRad: Law_Function.hxx
++header BRepBlend_EvolRadInv: Adaptor2d_HCurve2d.hxx
++header BRepBlend_EvolRadInv: math_Matrix.hxx
++header BRepBlend_EvolRadInv: Adaptor3d_HSurface.hxx
++header BRepBlend_EvolRadInv: Adaptor3d_HCurve.hxx
++header BRepBlend_EvolRadInv: Law_Function.hxx
++header BRepBlend_Ruled: gp_Ax1.hxx
++header BRepBlend_Ruled: math_Matrix.hxx
++header BRepBlend_Ruled: Blend_Point.hxx
++header BRepBlend_Ruled: Adaptor3d_HCurve.hxx
++header BRepBlend_Ruled: Adaptor3d_HSurface.hxx
++header BRepBlend_RuledInv: Adaptor2d_HCurve2d.hxx
++header BRepBlend_RuledInv: math_Matrix.hxx
++header BRepBlend_RuledInv: Adaptor3d_HSurface.hxx
++header BRepBlend_RuledInv: Adaptor3d_HCurve.hxx
+
 +header BRepBuilderAPI_CellFilter: gp_XY.hxx
 +header BRepBuilderAPI_CellFilter: gp_XYZ.hxx
 +header BRepBuilderAPI_VertexInspector: gp_XY.hxx
@@ -481,7 +540,11 @@
 +header HLRAlgo_Array1OfPHDat: gp_XYZ.hxx
 +header HLRAlgo_HArray1OfPHDat: gp_XYZ.hxx
 
++header IntPatch_SearchPnt: Intf_Polygon2d.hxx
+
 +header IntPolyh_PMaillageAffinage: IntPolyh_Triangle.hxx
+
++header MMgt_TShared: Standard_Type.hxx
 
 +header NCollection_CellFilter_Action: gp_Pnt.hxx
 +header NCollection_CellFilter_InspectorXY: gp_XYZ.hxx
@@ -497,6 +560,9 @@
 
 +header PrsMgr_Prs: PrsMgr_Presentation.hxx
 
++header SelectMgr_RectangularFrustum: bind_SelectMgr_Frustum.hxx
++header SelectMgr_TriangularFrustum: bind_SelectMgr_Frustum.hxx
+
 +header ShapeFix_Edge: TColStd_HArray1OfReal.hxx
 
 -header Standard_MMgrOpt: NCollection_SparseArrayBase.hxx
@@ -504,6 +570,12 @@
 -header Standard_MMgrRoot: NCollection_SparseArrayBase.hxx
 -header Standard_MMgrTBBalloc: NCollection_SparseArrayBase.hxx
 -header Standard_Persistent: Storage_Schema.hxx
+
++header StdLPersistent_Function: bind_StdObjMgt_Attribute.hxx
++header StdLPersistent_NamedData: bind_StdObjMgt_Attribute.hxx
++header StdLPersistent_Real: bind_StdObjMgt_Attribute.hxx
++header StdLPersistent_Variable: bind_StdObjMgt_Attribute.hxx
++header StdLPersistent_XLink: bind_StdObjMgt_Attribute.hxx
 
 +header TDocStd_XLinkIterator: TDocStd_XLink.hxx
 +header TDocStd_XLinkRoot: TDocStd_XLink.hxx
@@ -533,18 +605,29 @@
 
 +header XmlMXCAFDoc_LocationDriver: TopTools_LocationSet.hxx
 
++header XmlObjMgt_DOMString: LDOM_MemManager.hxx
+
 # Python names ----------------------------------------------------------------
-+pname NCollection_Lerp<gp_Trsf>: gp_TrsfNLerp
++pname AIS_PointCloud::DisplayMode-->enumDisplayMode
++pname NCollection_Lerp<gp_Trsf>-->gp_TrsfNLerp
 
 # nodelete option -------------------------------------------------------------
 +nodelete TDF_LabelNode
 
 # Excluded base classes -------------------------------------------------------
+-base BVH_PrimitiveSet<T, N>: BVH_Object<T, N>
+-base LDOM_OSStream: Standard_OStream
+-base LDOM_SBuffer: std::streambuf
+-base OpenGl_GlCore13: OpenGl_GlCore12
+-base OpenGl_GlCore13Fwd: OpenGl_GlCore12Fwd
+-base OpenGl_TriangleSet: OpenGl_BVHTriangulation3f
 -base Poly_BaseIteratorOfCoherentLink: NCollection_BaseVector::Iterator
 -base Poly_BaseIteratorOfCoherentNode: NCollection_BaseVector::Iterator
 -base Poly_BaseIteratorOfCoherentTriangle: NCollection_BaseVector::Iterator
 -base NCollection_Handle<T>: opencascade::handle<Standard_Transient>
 -base Standard_ArrayStreamBuffer: std::streambuf
+-base StdObjMgt_MapOfInstantiators: NCollection_DataMap<TCollection_AsciiString, StdObjMgt_Persistent::Instantiator, TCollection_AsciiString>
+-base StdLPersistent_TreeNode: StdObjMgt_Attribute<TDataStd_TreeNode>::Static
 
 # Excluded fields -------------------------------------------------------------
 -field Graphic3d_CStructure::IsInfinite
@@ -583,6 +666,7 @@
 -import GeomAdaptor: GeomEvaluator
 -import Geom2dAdaptor: Geom2dEvaluator
 -import NCollection: gp
+-import Select3D: SelectMgr
 -import StdObj: StdPersistent
 -import StdObj: ShapePersistent
 -import StdPersistent: ShapePersistent
@@ -610,3 +694,30 @@
 # Nested classes --------------------------------------------------------------
 +nested NCollection_BaseList::Iterator
 +nested NCollection_BaseMap::Iterator
++nested NCollection_UBTree<TheObjType, TheBndType>::Selector
+
+# Skipped types ---------------------------------------------------------------
++skip Graphic3d_UniformValueTypeID<Graphic3d_Vec2>
++skip Graphic3d_UniformValueTypeID<Graphic3d_Vec2i>
++skip Graphic3d_UniformValueTypeID<Graphic3d_Vec3>
++skip Graphic3d_UniformValueTypeID<Graphic3d_Vec3i>
++skip Graphic3d_UniformValueTypeID<Graphic3d_Vec4>
++skip Graphic3d_UniformValueTypeID<Graphic3d_Vec4i>
++skip Graphic3d_UniformValueTypeID<Standard_Integer>
++skip Graphic3d_UniformValueTypeID<Standard_ShortReal>
++skip OpenGl_TextureFormatSelector<GLbyte>
++skip OpenGl_TextureFormatSelector<GLfloat>
++skip OpenGl_TextureFormatSelector<GLint>
++skip OpenGl_TextureFormatSelector<GLshort>
++skip OpenGl_TextureFormatSelector<GLubyte>
++skip OpenGl_TextureFormatSelector<GLuint>
++skip OpenGl_TextureFormatSelector<GLushort>
+
+# Manual text -----------------------------------------------------------------
++manual SelectMgr_RectangularFrustum-->bind_SelectMgr_Frustum<4>(mod, "Select_Mgr_Frustum4", py::module_local());
++manual SelectMgr_TriangularFrustum-->bind_SelectMgr_Frustum<3>(mod, "Select_Mgr_Frustum3", py::module_local());
++manual StdLPersistent_Function-->bind_StdObjMgt_Attribute<TFunction_Function>(mod, "StdObjMgt_Attribute_TFunction_Function", py::module_local());
++manual StdLPersistent_NamedData-->bind_StdObjMgt_Attribute<TDataStd_NamedData>(mod, "StdObjMgt_Attribute_TDataStd_NamedData", py::module_local());
++manual StdLPersistent_Real-->bind_StdObjMgt_Attribute<TDataStd_Real>(mod, "StdObjMgt_Attribute_TDataStd_Real", py::module_local());
++manual StdLPersistent_Variable-->bind_StdObjMgt_Attribute<TDataStd_Variable>(mod, "StdObjMgt_Attribute_TDataStd_Variable", py::module_local());
++manual StdLPersistent_XLink-->bind_StdObjMgt_Attribute<TDocStd_XLink>(mod, "StdObjMgt_Attribute_TDocStd_XLink", py::module_local());
