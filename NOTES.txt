@@ -10,7 +10,7 @@ Development Plan 05-27-2019:
 - Circular dependency (done)
 - Call guards (done)
 - Immutable inputs
-- Iterators
+- Iterators (done)
 
 Issues:
 - Make is_transient more robust

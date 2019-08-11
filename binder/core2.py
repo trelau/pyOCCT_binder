@@ -1389,6 +1389,21 @@ class CursorBinder(object):
         return True
 
     @property
+    def is_maybe_iterable(self):
+        """
+        :return: Check to see if the type is maybe iterable (has begin and end
+            methods).
+        :rtype: bool
+        """
+        method_names = set()
+        for f in self.methods:
+            if not f.is_public:
+                continue
+            method_names.add(f.spelling)
+
+        return 'begin' in method_names and 'end' in method_names
+
+    @property
     def qualified_name(self):
         """
         :return: The fully qualified displayed name.
@@ -2396,6 +2411,13 @@ def generate_class(binder):
         if item.is_public:
             item.parent_name = cls
             src += generate_method(item)
+
+    # Check for an iterable type and add __iter__
+    if binder.is_maybe_iterable:
+        msg = '\tAdding __iter__ to {}\n'.format(qname)
+        logger.write(msg)
+        src += '{}.def(\"__iter__\", [](const {} &self) {{ return py::make_iterator(self.begin(), self.end()); }}, py::keep_alive<0, 1>());\n'.format(
+            cls, qname)
 
     # Enums
     src.append('\n// Enums\n')
