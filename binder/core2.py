@@ -1671,7 +1671,8 @@ class CursorBinder(object):
         :rtype: bool
         """
         for a in self.parameters:
-            if a.is_immutable and not a.type.is_const_qualified:
+            if (a.is_immutable and not a.type.is_const_qualified and
+                    a.type.is_pointer_like):
                 return True
         return False
 
@@ -2608,8 +2609,22 @@ def generate_method(binder):
     if qname in Generator.call_guards:
         cguards = ', ' + ', '.join(Generator.call_guards[qname])
 
+    needs_inout = binder.needs_inout_method
+
     for i in range(nargs - ndefaults, nargs + 1):
-        if i == nargs:
+        if needs_inout:
+            txt = generate_immutable_inout_method(binder, qname)
+            py_args = []
+            for name in args_name:
+                py_args.append(', py::arg(\"{}\")'.format(name))
+            py_args = ''.join(py_args)
+            src = '{}.def{}(\"{}\", {}, \"{}\"{});\n'.format(prefix, is_static,
+                                                             fname, txt,
+                                                             docs, py_args)
+            if True in is_array_like:
+                src = ' '.join(['//', src])
+            return [src]
+        elif i == nargs:
             names = args_name[0:i]
             types = args_type[0:i]
 
@@ -2626,7 +2641,6 @@ def generate_method(binder):
                 signature, is_const,
                 qname, is_operator,
                 docs, py_args, cguards)
-
         else:
             arg_list = []
             args_spelling = []
@@ -2837,3 +2851,74 @@ def function_signature(binder):
             is_array.append(False)
 
     return nargs, ndefaults, args_name, args_type, defaults, is_array
+
+
+def generate_immutable_inout_method(binder, qname):
+    """
+    Generate binding for a function that modifies immutable types in place.
+
+    :param binder.core2.CursorBinder binder: The binder.
+    :param str qname: The function fully qualified name.
+
+    :return: The binding text.
+    :rtype: str
+    """
+    logger.write('\tInout: {}\n'.format(qname))
+
+    # Separate const and non-const input arguments
+    args = []
+    non_const_immutable_args = []
+    i = 0
+    for arg in binder.parameters:
+        type_ = arg.type.spelling
+        name = arg.spelling
+        if not name:
+            name = 'a{}'.format(str(i))
+            i += 1
+        if not arg.type.is_const_qualified and arg.is_immutable and arg.type.is_pointer_like:
+            non_const_immutable_args.append((type_, name))
+        args.append((type_, name))
+
+    # All arguments
+    is_static = True
+    if args:
+        delimiter = ', '
+    else:
+        delimiter = ''
+    if binder.is_static_method:
+        interface_txt = '(' + ', '.join([type_ + ' ' + name for type_, name in args]) + ')'
+    else:
+        interface_txt = '({} &self{}'.format(binder.parent.type.spelling, delimiter) + ', '.join([type_ + ' ' + name for type_, name in args]) + ')'
+        is_static = False
+
+    # Function call
+    is_void = False
+    if binder.rtype.spelling == 'void':
+        is_void = True
+    args_txt = ', '.join([name for _, name in args])
+    if is_static:
+        fcall = qname
+    else:
+        fcall = 'self.{}'.format(binder.spelling)
+
+    # Return type
+    rtype = binder.rtype.spelling
+
+    if is_void:
+        func_txt = '{{ {}({}); '.format(fcall, args_txt)
+    else:
+        func_txt = '{{ {} rv = {}({}); '.format(rtype, fcall, args_txt)
+
+    return_args = ', '.join([name for _, name in non_const_immutable_args])
+    return_types = ', '.join([type_ for type_, _ in non_const_immutable_args])
+    if is_void:
+        if len(non_const_immutable_args) > 1:
+            return_txt = 'return std::tuple<{}>({}); }}'.format(return_types, return_args)
+        else:
+            return_txt = 'return ' + return_args + '; }'
+    else:
+        return_txt = 'return std::tuple<{}, {}>(rv, {}); }}'.format(rtype, return_types, return_args)
+
+    # Binding text
+    bind_txt = '[]' + interface_txt + func_txt + return_txt
+    return bind_txt
