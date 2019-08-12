@@ -1,17 +1,7 @@
-Development Plan 05-27-2019:
-- Use latest pybind11 master (done)
-- Review binder and clean-up (done)
-- Bind enums (done)
-- Bind functions (done)
-- Bind types NOT derived from Standard_Transient (done)
-- Bind types derived from Standard_Transient (done)
-- Bind typedefs (done)
-- Bind class templates (done)
-- Circular dependency (done)
-- Call guards (done)
-- Immutable inputs
-- Iterators (done)
-
 Issues:
 - Make is_transient more robust
+  - SelectMgr_SensitiveEntitySet
+  - BRepExtrema_TriangleSet
+- Reconsider base classes of BVH_PrimitiveSet<T, N>
+- Put "name" + "_Base" for manual binding of templated base classes
 - How to handle types that get reset with "=" in implementation?

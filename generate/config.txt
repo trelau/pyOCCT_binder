@@ -541,6 +541,8 @@
 +header BRepOffsetAPI_Sewing: TopoDS_Face.hxx
 +header BRepOffsetAPI_Sewing: BRepTools_ReShape.hxx
 
++header BVH_Triangulation<T, N>: bind_BVH_PrimitiveSet.hxx
+
 +header Graphic3d_ZLayerSetting: Precision.hxx
 
 +header HLRAlgo_Array1OfPHDat: gp_XYZ.hxx
@@ -621,7 +623,7 @@
 +nodelete TDF_LabelNode
 
 # Excluded base classes -------------------------------------------------------
--base BVH_PrimitiveSet<T, N>: BVH_Object<T, N>
+# -base BVH_PrimitiveSet<T, N>: BVH_Object<T, N>
 -base LDOM_OSStream: Standard_OStream
 -base LDOM_SBuffer: std::streambuf
 -base OpenGl_GlCore13: OpenGl_GlCore12
@@ -720,6 +722,7 @@
 +skip OpenGl_TextureFormatSelector<GLushort>
 
 # Manual text -----------------------------------------------------------------
++manual BVH_Triangulation<T, N>-->bind_BVH_PrimitiveSet<T, N>(mod, "BVH_Triangulation_Base", py::module_local());
 +manual SelectMgr_RectangularFrustum-->bind_SelectMgr_Frustum<4>(mod, "Select_Mgr_Frustum4", py::module_local());
 +manual SelectMgr_TriangularFrustum-->bind_SelectMgr_Frustum<3>(mod, "Select_Mgr_Frustum3", py::module_local());
 +manual StdLPersistent_Function-->bind_StdObjMgt_Attribute<TFunction_Function>(mod, "StdObjMgt_Attribute_TFunction_Function", py::module_local());
