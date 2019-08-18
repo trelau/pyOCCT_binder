@@ -1526,16 +1526,52 @@ class CursorBinder(object):
         def _get_bases(_c):
             for base in _c.bases:
                 bases.append(base)
-                _c = base.type.get_declaration()
-                # Check for a template
-                _s = _c.get_specialization()
-                if not _s.no_decl and _s.is_class_template:
-                    _get_bases(_s)
-                else:
-                    _get_bases(_c)
+                # Get declaration
+                _decl = base.type.get_declaration()
+                if _decl.no_decl:
+                    continue
+
+                # Get bases of class template
+                if _decl.is_class_template:
+                    _get_bases(_decl)
+                    continue
+
+                # Get template specialization if possible
+                _spec = _decl.get_specialization()
+                if not _spec.no_decl and _spec.is_class_template:
+                    _get_bases(_spec)
+                    continue
+
+                # Get bases of regular class
+                if _decl.is_class:
+                    _get_bases(_decl)
+                    continue
+
+                # Get bases of a typedef
+                if _decl.is_typedef:
+                    # Get underlying type if a typedef
+                    # c = base.type.get_canonical().get_declaration()
+                    _decl = _decl.underlying_typedef_type.get_declaration()
+                    # Check for a template
+                    _spec = _decl.get_specialization()
+                    if not _spec.no_decl and _spec.is_class_template:
+                        _get_bases(_spec)
+                    else:
+                        _get_bases(_decl)
+                    continue
+
+                # Should never get here
+                assert False
 
         bases = []
-        _get_bases(self)
+        # If "self" is a template specialization, try and get it first before
+        # starting search for base classes.
+        # Get template specialization if possible
+        spec = self.get_specialization()
+        if not spec.no_decl and spec.is_class_template:
+            _get_bases(spec)
+        else:
+            _get_bases(self)
         return bases
 
     @property
@@ -2367,13 +2403,15 @@ def generate_class(binder):
         name = base.type.spelling
         if name in excluded_bases or name in Generator.excluded_classes:
             continue
-        # Get the underlying specialization if a template to check for
-        # holder type
-        _base = base.type.get_declaration().get_specialization()
-        if not _base.no_decl:
-            base_holder_type = _base.holder_type
-        else:
-            base_holder_type = base.type.get_declaration().holder_type
+        # A total hack to try and figure out holder type. Might be a libclang
+        # issue. Seems like the same cursor comes back from both methods but
+        # only one returns an 'opencascade::handle' holder type. So, if either
+        # of them returns that just use it.
+        holder1 = base.type.get_declaration().holder_type
+        holder2 = base.type.get_canonical().get_declaration().holder_type
+        base_holder_type = 'std::unique_ptr'
+        if 'opencascade::handle' in [holder1, holder2]:
+            base_holder_type = 'opencascade::handle'
         # Check to see if type uses same holder type
         if holder_type != base_holder_type:
             msg = '\tMismatched holder types: {} --> {}\n'.format(

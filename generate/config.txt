@@ -164,6 +164,7 @@
 -function BSplCLib::DN(const Standard_Real, const Standard_Integer, const TColgp_Array1OfPnt &, const TColStd_Array1OfReal &, gp_Pnt &, gp_Vec &)
 -function BSplCLib::DN(const Standard_Real, const Standard_Integer, const TColgp_Array1OfPnt2d &, const TColStd_Array1OfReal &, gp_Pnt2d &, gp_Vec2d &)
 
+-function BVH_Object<T, N>::BVH_Object<T, N>
 -function BVH_PrimitiveSet<T, N>::BVH_PrimitiveSet<T, N>
 
 -function CDM_Document::operator<<
@@ -541,6 +542,7 @@
 +header BRepOffsetAPI_Sewing: TopoDS_Face.hxx
 +header BRepOffsetAPI_Sewing: BRepTools_ReShape.hxx
 
++header BVH_PrimitiveSet<T, N>: bind_BVH_Object.hxx
 +header BVH_Triangulation<T, N>: bind_BVH_PrimitiveSet.hxx
 
 +header Graphic3d_ZLayerSetting: Precision.hxx
@@ -623,7 +625,6 @@
 +nodelete TDF_LabelNode
 
 # Excluded base classes -------------------------------------------------------
-# -base BVH_PrimitiveSet<T, N>: BVH_Object<T, N>
 -base LDOM_OSStream: Standard_OStream
 -base LDOM_SBuffer: std::streambuf
 -base OpenGl_GlCore13: OpenGl_GlCore12
@@ -722,6 +723,7 @@
 +skip OpenGl_TextureFormatSelector<GLushort>
 
 # Manual text -----------------------------------------------------------------
++manual BVH_PrimitiveSet<T, N>-->bind_BVH_Object<T, N>(mod, "BVH_PrimitiveSet_Base", py::module_local());
 +manual BVH_Triangulation<T, N>-->bind_BVH_PrimitiveSet<T, N>(mod, "BVH_Triangulation_Base", py::module_local());
 +manual SelectMgr_RectangularFrustum-->bind_SelectMgr_Frustum<4>(mod, "Select_Mgr_Frustum4", py::module_local());
 +manual SelectMgr_TriangularFrustum-->bind_SelectMgr_Frustum<3>(mod, "Select_Mgr_Frustum3", py::module_local());
