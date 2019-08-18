@@ -587,6 +587,9 @@
 +header StdLPersistent_Variable: bind_StdObjMgt_Attribute.hxx
 +header StdLPersistent_XLink: bind_StdObjMgt_Attribute.hxx
 
++header StdPersistent_DataXtd_Constraint: bind_StdObjMgt_Attribute.hxx
++header StdPersistent_DataXtd_PatternStd: bind_StdObjMgt_Attribute.hxx
+
 +header TDocStd_XLinkIterator: TDocStd_XLink.hxx
 +header TDocStd_XLinkRoot: TDocStd_XLink.hxx
 
@@ -676,8 +679,8 @@
 -import Geom2dAdaptor: Geom2dEvaluator
 -import NCollection: gp
 -import Select3D: SelectMgr
--import StdObj: StdPersistent
--import StdObj: ShapePersistent
+-import StdObject: StdPersistent
+-import StdObject: ShapePersistent
 -import StdPersistent: ShapePersistent
 -import XCAFDimTolObjects: XCAFDoc
 
@@ -732,3 +735,5 @@
 +manual StdLPersistent_Real-->bind_StdObjMgt_Attribute<TDataStd_Real>(mod, "StdObjMgt_Attribute_TDataStd_Real", py::module_local());
 +manual StdLPersistent_Variable-->bind_StdObjMgt_Attribute<TDataStd_Variable>(mod, "StdObjMgt_Attribute_TDataStd_Variable", py::module_local());
 +manual StdLPersistent_XLink-->bind_StdObjMgt_Attribute<TDocStd_XLink>(mod, "StdObjMgt_Attribute_TDocStd_XLink", py::module_local());
++manual StdPersistent_DataXtd_Constraint-->bind_StdObjMgt_Attribute<TDataXtd_Constraint>(mod, "StdObjMgt_Attribute_TDataXtd_Constraint", py::module_local());
++manual StdPersistent_DataXtd_PatternStd-->bind_StdObjMgt_Attribute<TDataXtd_PatternStd>(mod, "StdObjMgt_Attribute_TDataXtd_PatternStd", py::module_local());

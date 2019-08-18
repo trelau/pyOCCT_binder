@@ -541,8 +541,10 @@ template<typename T> struct Deleter { void operator() (T *o) const { delete o; }
         binders = self.tu_binder.get_children()
         for binder in binders:
             # Only bind definitions
-            # TODO Why is IGESFile not considered a definition?
-            if not binder.is_definition and not binder.spelling.startswith('IGESFile'):
+            # TODO Why is IGESFile and StepFile not considered definitions?
+            if (not binder.is_definition and
+                    not binder.spelling.startswith('IGESFile') and
+                    not binder.spelling.startswith('StepFile')):
                 continue
 
             # Bind only these types of cursors
