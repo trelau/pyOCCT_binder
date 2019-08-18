@@ -2814,12 +2814,13 @@ def generate_class_template(binder):
     src = generate_class(binder)
 
     # Hack to correct spelling of some types that miss the template parameters
-    # like NCollection_List::iterator
+    # and "typename" qualifier like "NCollection_List::iterator" should be
+    # "typename NCollection_List<TheItemType>::iterator".
     src_out = []
     qname = binder.qualified_name
     spelling = binder.qualified_spelling
     for line in src:
-        line = line.replace(spelling + '::', qname + '::')
+        line = line.replace(spelling + '::', 'typename ' + qname + '::')
         src_out.append(line)
     return src_out
 
