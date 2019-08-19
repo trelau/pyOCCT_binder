@@ -1,7 +1,3 @@
 Issues:
-- Make is_transient more robust
-  - SelectMgr_SensitiveEntitySet
-  - BRepExtrema_TriangleSet
-- Reconsider base classes of BVH_PrimitiveSet<T, N>
-- Put "name" + "_Base" for manual binding of templated base classes
 - How to handle types that get reset with "=" in implementation?
+- Error handling types

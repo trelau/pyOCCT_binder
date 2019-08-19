@@ -17,11 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
-# TODO Error handling types
-# TODO stdout types
-# TODO Immutable types
-# TODO Unscoped enums?
-# TODO AdvApp2Var binding all kinds of stuff
 import os
 from collections import OrderedDict
 from ctypes import c_uint
@@ -1370,7 +1365,6 @@ class CursorBinder(object):
             from it.
         :rtype: bool
         """
-        # TODO Make is_transient more robust
         if self.type.spelling == 'Standard_Transient':
             return True
         bases = self._all_bases
@@ -2468,7 +2462,6 @@ def generate_class(binder):
             if item.is_public:
                 item.parent_name = cls
                 src += generate_ctor(item)
-        # TODO Default constructor
 
     # Fields
     src.append('\n// Fields\n')
@@ -2536,9 +2529,6 @@ def generate_ctor(binder):
     :return: Binder source as a list of lines.
     :rtype: list(str)
     """
-    # TODO Copy ctor, call guards, abstract classes
-    # TODO How to handle move constructor?
-
     ctors = []
 
     sig = function_signature(binder)
@@ -2927,9 +2917,12 @@ def generate_immutable_inout_method(binder, qname):
     else:
         delimiter = ''
     if binder.is_static_method:
-        interface_txt = '(' + ', '.join([type_ + ' ' + name for type_, name in args]) + ')'
+        interface_txt = '(' + ', '.join(
+            [type_ + ' ' + name for type_, name in args]) + ')'
     else:
-        interface_txt = '({} &self{}'.format(binder.parent.type.spelling, delimiter) + ', '.join([type_ + ' ' + name for type_, name in args]) + ')'
+        interface_txt = '({} &self{}'.format(binder.parent.type.spelling,
+                                             delimiter) + ', '.join(
+            [type_ + ' ' + name for type_, name in args]) + ')'
         is_static = False
 
     # Function call
@@ -2954,11 +2947,14 @@ def generate_immutable_inout_method(binder, qname):
     return_types = ', '.join([type_ for type_, _ in non_const_immutable_args])
     if is_void:
         if len(non_const_immutable_args) > 1:
-            return_txt = 'return std::tuple<{}>({}); }}'.format(return_types, return_args)
+            return_txt = 'return std::tuple<{}>({}); }}'.format(return_types,
+                                                                return_args)
         else:
             return_txt = 'return ' + return_args + '; }'
     else:
-        return_txt = 'return std::tuple<{}, {}>(rv, {}); }}'.format(rtype, return_types, return_args)
+        return_txt = 'return std::tuple<{}, {}>(rv, {}); }}'.format(rtype,
+                                                                    return_types,
+                                                                    return_args)
 
     # Binding text
     bind_txt = '[]' + interface_txt + func_txt + return_txt
