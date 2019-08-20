@@ -2371,7 +2371,8 @@ def generate_class(binder):
         holder = ', std::unique_ptr<{}, py::nodelete>'.format(qname)
         holder_type = 'std::unique_ptr'
     else:
-        holder = ', std::unique_ptr<{}, Deleter<{}>>'.format(qname, qname)
+        # holder = ', std::unique_ptr<{}, Deleter<{}>>'.format(qname, qname)
+        holder = ', std::unique_ptr<{}>'.format(qname)
         holder_type = 'std::unique_ptr'
 
     # Excluded base classes
