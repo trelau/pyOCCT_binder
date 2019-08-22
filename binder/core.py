@@ -396,9 +396,6 @@ namespace py = pybind11;
 
 // Use opencascade::handle as holder type for Standard_Transient types
 PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
-
-// Deleter template for mixed holder types with public/hidden destructors
-template<typename T> struct Deleter { void operator() (T *o) const { delete o; } };
 """
 
         fout.write(txt)
@@ -2371,8 +2368,8 @@ def generate_class(binder):
         holder = ', std::unique_ptr<{}, py::nodelete>'.format(qname)
         holder_type = 'std::unique_ptr'
     else:
-        # holder = ', std::unique_ptr<{}, Deleter<{}>>'.format(qname, qname)
-        holder = ', std::unique_ptr<{}>'.format(qname)
+        # Use default std::unique_ptr
+        holder = ''
         holder_type = 'std::unique_ptr'
 
     # Excluded base classes
