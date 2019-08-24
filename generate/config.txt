@@ -405,6 +405,7 @@
 -function StepToTopoDS_Builder::StepToTopoDS_Builder(const opencascade::handle<StepShape_GeometricSet> &, const opencascade::handle<Transfer_TransientProcess> &)
 
 -function TCollection_ExtendedString::ToUTF8CString
+-function TCollection_ExtendedString::ToWideString
 
 -function TNaming_RefShape::FirstUse
 
