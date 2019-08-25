@@ -34,7 +34,7 @@ print('Checking circular imports...')
 main.check_circular()
 
 print('Binding templates...')
-main.bind_templates('C:/Users/Trevor/Work/Products/pyOCCT/src/include')
+main.bind_templates('C:/Users/Trevor/Work/Products/pyOCCT/src')
 
 print('Binding...')
-main.bind('C:/Users/Trevor/Work/Products/pyOCCT/src/modules')
+main.bind('C:/Users/Trevor/Work/Products/pyOCCT/src')

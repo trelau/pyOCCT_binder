@@ -362,7 +362,7 @@ class Generator(object):
                     self.immutable.add(line)
                     continue
 
-    def generate_common_header(self, path='./output/include'):
+    def generate_common_header(self, path):
         """
         Generate common header file for the pyOCCT project.
 
@@ -399,26 +399,6 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
 """
 
         fout.write(txt)
-
-        # Call guards
-        if self.import_guards:
-            fout.write('\n// Call guards')
-        used_mods = set()
-        for key in self.import_guards:
-            for mod in self.import_guards[key]:
-                if mod in used_mods:
-                    continue
-                used_mods.add(mod)
-                fout.write('\n')
-
-                fout.write('struct Import{}{{\n'.format(mod))
-                fout.write(
-                    '\tImport{}() {{ py::module::import(\"{}.{}\"); }}\n'.format(
-                        mod, Generator.package_name, mod))
-                fout.write('};\n')
-        if self.import_guards:
-            fout.write('\n')
-
         fout.write('#endif\n')
         fout.close()
 
@@ -700,7 +680,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
             mod.sort_binders()
         logger.write('done.\n\n')
 
-    def bind(self, path='./output/modules'):
+    def bind(self, path):
         """
         Bind the library.
 
@@ -713,7 +693,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
             mod.bind(path)
         logger.write('done.\n\n')
 
-    def bind_templates(self, path='./output/include'):
+    def bind_templates(self, path):
         """
         Bind the library.
 
@@ -896,6 +876,7 @@ class Module(object):
 
         :return: None.
         """
+        self.includes = ['pyOCCT_Common.hxx']
         all_binders = self.sorted_binders + self.templates
         for binder in all_binders:
             binders = [binder] + binder.grouped_binders
@@ -940,7 +921,7 @@ class Module(object):
         """
         return self.is_dependent(other) and other.is_dependent(self)
 
-    def bind_templates(self, path='./include'):
+    def bind_templates(self, path):
         """
         Bind templates.
 
@@ -949,7 +930,7 @@ class Module(object):
         :return:
         """
         # Create module folder
-        folder = '/'.join([path])
+        folder = '/'.join([path, 'templates'])
         if not os.path.isdir(folder):
             os.makedirs(folder)
 
@@ -958,7 +939,7 @@ class Module(object):
         for binder in binders:
             binder.bind(folder)
 
-    def bind(self, path='./modules'):
+    def bind(self, path):
         """
         Bind the module.
 
@@ -967,35 +948,34 @@ class Module(object):
         :return: None.
         """
         # Create module folder and main source file
-        folder = '/'.join([path, self.name])
+        folder = '/'.join([path, 'modules'])
         if not os.path.isdir(folder):
             os.makedirs(folder)
         fname = '/'.join([folder, self.name + '.cxx'])
         fout = open(fname, 'w')
 
-        # Get ordered binders and generate source
-        binders = self.sorted_binders
-        for binder in binders:
-            binder.bind(folder)
-
         # File header
         fout.write(src_prefix)
 
-        # Include common header
-        fout.write('#include <pyOCCT_Common.hxx>\n\n')
-
-        # Interface definitions
+        # Generate binding source and headers
+        binders = self.sorted_binders
+        extra_headers = []
         for binder in binders:
-            interface = binder.bind_name
-            if interface is None:
+            headers = binder.bind(folder)
+            if headers:
+                extra_headers += headers
+
+        # Write include files
+        used_includes = set()
+        for inc in self.includes + extra_headers:
+            if inc in used_includes:
                 continue
-            fout.write('void {}(py::module &);\n'.format(interface))
+            used_includes.add(inc)
+            fout.write('#include <{}>\n'.format(inc))
         fout.write('\n')
 
         # Initialize
         fout.write('PYBIND11_MODULE({}, mod) {{\n\n'.format(self.name))
-
-        # Stop here if module is excluded
 
         # Import other modules
         has_guards = self.name in Generator.import_guards
@@ -1010,20 +990,17 @@ class Module(object):
                     Generator.package_name, mod_name))
         fout.write('\n')
 
-        # Import guards (put in common header)
-        # for mod_name in guarded:
-        #     fout.write('struct Import{}{{\n'.format(mod_name))
-        #     fout.write(
-        #         '\tImport{}() {{ py::module::import(\"{}.{}\"); }}\n'.format(
-        #             mod_name, Generator.package_name, mod_name))
-        #     fout.write('};\n\n')
+        # Import guards
+        for mod_name in guarded:
+            fout.write('struct Import{}{{\n'.format(mod_name))
+            fout.write(
+                '\tImport{}() {{ py::module::import(\"{}.{}\"); }}\n'.format(
+                    mod_name, Generator.package_name, mod_name))
+            fout.write('};\n\n')
 
-        # Call bind functions
+        # Main bind loop
         for binder in binders:
-            interface = binder.bind_name
-            if interface is None:
-                continue
-            fout.write('{}(mod);\n'.format(interface))
+            fout.writelines(binder.src)
         fout.write('\n')
 
         # End module
@@ -1058,6 +1035,7 @@ class CursorBinder(object):
         self.includes = []
         self.grouped_binders = []
         self.skip = False
+        self.src = []
 
         # Filename
         try:
@@ -1767,7 +1745,7 @@ class CursorBinder(object):
         :return: List of include files.
         :rtype: list(str)
         """
-        includes = ['pyOCCT_Common.hxx']
+        includes = []
 
         # Extra headers
         qname = self.qualified_name
@@ -1838,13 +1816,13 @@ class CursorBinder(object):
         """
         logger.write('\tBinding {}.\n'.format(self.qualified_spelling))
         if self.is_enum:
-            bind_enum(self, path)
+            return bind_enum(self)
         elif self.is_function:
-            bind_function(self, path)
+            return bind_function(self)
         elif self.is_class:
-            bind_class(self, path)
+            return bind_class(self)
         elif self.is_typedef:
-            bind_typedef(self, path)
+            return bind_typedef(self)
         elif self.is_class_template:
             bind_class_template(self, path)
         else:
@@ -1974,24 +1952,18 @@ class TypeBinder(object):
         return TypeBinder(self.type.get_pointee())
 
 
-def bind_enum(binder, path):
+def bind_enum(binder):
     """
     Bind an enum.
 
     :param binder.core.CursorBinder binder: The binder.
-    :param str path: The path to write the source file.
 
     :return: None.
     """
-    src = []
+    src = ['// ENUM: {}\n'.format(binder.python_name.upper())]
 
     # Get list of binders if grouped
     binders = [binder] + binder.grouped_binders
-
-    # Include files
-    for inc in binder.includes:
-        src.append('#include <{}>\n'.format(inc))
-    src.append('\n')
 
     # Bind function name
     python_name = binder.python_name
@@ -1999,12 +1971,6 @@ def bind_enum(binder, path):
     if not python_name or '(anonymous enum' in python_name:
         msg = '\tFound anonymous enum: {}\n'.format(binder.type.spelling)
         logger.write(msg)
-        python_name = binder.enum_constants[0].spelling
-    bind_name = '_'.join(['bind', python_name])
-    binder.bind_name = bind_name
-
-    # Bind function
-    src.append('void {}(py::module &mod){{\n\n'.format(bind_name))
 
     # Generate source
     for binder_ in binders:
@@ -2012,125 +1978,58 @@ def bind_enum(binder, path):
         src.append('\n')
     src.append('\n')
 
-    # End function
-    src.append('}')
-
-    # Write file
-    fname = ''.join([path, '/', bind_name, '.cxx'])
-    fout = open(fname, 'w')
-    fout.write(src_prefix)
-    fout.writelines(src)
+    binder.src = src
+    return []
 
 
-def bind_function(binder, path):
+def bind_function(binder):
     """
     Bind a function.
 
     :param binder.core.CursorBinder binder: The binder.
-    :param str path: The path to write the source file.
 
     :return: None.
     """
-    src = []
+    src = ['// FUNCTION: {}\n'.format(binder.python_name.upper())]
 
     # Get list of binders if function is overloaded
     binders = [binder] + binder.grouped_binders
-
-    # Include files
-    used_includes = set()
-    for binder_ in binders:
-        for inc in binder_.includes:
-            if inc not in used_includes:
-                src.append('#include <{}>\n'.format(inc))
-                used_includes.add(inc)
-    src.append('\n')
-
-    # Bind function name
-    for binder_ in binders:
-        bind_name = '_'.join(['bind', binder_.python_name])
-        binder_.bind_name = bind_name
-    bind_name = binders[0].bind_name
-
-    # Bind function
-    src.append('void {}(py::module &mod){{\n\n'.format(bind_name))
 
     # Generate source
     for binder_ in binders:
         src += generate_function(binder_)
 
-    # End function
-    src.append('}')
-
-    # Write file
-    fname = ''.join([path, '/', bind_name, '.cxx'])
-    try:
-        fout = open(fname, 'w')
-        fout.write(src_prefix)
-        fout.writelines(src)
-    except IOError:
-        logger.write('\tFailed to write file for {}.\n'.format(fname))
-        for binder in binders:
-            binder.bind_name = None
+    binder.src = src
+    return []
 
 
-def bind_class(binder, path):
+def bind_class(binder):
     """
     Bind a class.
 
     :param binder.core.CursorBinder binder: The binder.
-    :param str path: The path to write the source file.
 
     :return: None.
     """
-    src = []
-
-    for inc in binder.includes:
-        src.append('#include <{}>\n'.format(inc))
-    src.append('\n')
-
-    # Bind function name
-    bind_name = '_'.join(['bind', binder.python_name])
-    binder.bind_name = bind_name
-
-    # Bind function
-    src.append('void {}(py::module &mod){{\n\n'.format(bind_name))
+    src = ['// CLASS: {}\n'.format(binder.python_name.upper())]
 
     # Generate source
     src += generate_class(binder)
     src.append('\n')
 
-    # End function
-    src.append('}')
-
-    # Write file
-    fname = ''.join([path, '/', bind_name, '.cxx'])
-    fout = open(fname, 'w')
-    fout.write(src_prefix)
-
-    fout.writelines(src)
+    binder.src = src
+    return []
 
 
-def bind_typedef(binder, path):
+def bind_typedef(binder):
     """
     Bind a typedef.
 
     :param binder.core.CursorBinder binder: The binder.
-    :param str path: The path to write the source file.
 
     :return: None.
     """
-    # Include files
-    includes = []
-    for inc in binder.includes:
-        includes.append('#include <{}>\n'.format(inc))
-    includes.append('\n')
-
-    # Bind function name
-    bind_name = '_'.join(['bind', binder.python_name])
-    binder.bind_name = bind_name
-
-    # Bind function
-    src = ['void {}(py::module &mod){{\n\n'.format(bind_name)]
+    src = ['// TYPEDEF: {}\n'.format(binder.python_name.upper())]
 
     # Generate source
     other_src, bind_template, extra = generate_typedef2(binder)
@@ -2142,26 +2041,18 @@ def bind_typedef(binder, path):
     src += other_src
 
     # Include template if needed
+    extra_headers = []
     if bind_template is None:
-        includes = ['#include <pyOCCT_Common.hxx>\n']
         bind_template = []
     for template in bind_template:
         if template in Generator.available_templates:
-            includes.append('#include <{}.hxx>\n'.format(template))
-    if bind_template:
-        includes.append('\n')
+            extra_headers.append(template + '.hxx')
 
-    src = includes + extra + src
+    src = extra + src
     src.append('\n')
 
-    # End function
-    src.append('}')
-
-    # Write file
-    fname = ''.join([path, '/', bind_name, '.cxx'])
-    fout = open(fname, 'w')
-    fout.write(src_prefix)
-    fout.writelines(src)
+    binder.src = src
+    return extra_headers
 
 
 def bind_class_template(binder, path):
@@ -2191,8 +2082,6 @@ def bind_class_template(binder, path):
     Generator.available_templates.add(binder.bind_name)
 
     # Function template
-    # template_params = ['typename ' + b.display_name for b in
-    #                    binder.template_parameters]
     template_params = []
     for t in binder.template_parameters:
         if t.is_template_type_param:
@@ -2446,26 +2335,35 @@ def generate_class(binder):
                                                                  local)]
 
     # Constructors
+    src_ctor = []
     if not binder.is_abstract:
-        src.append('\n// Constructors\n')
         for item in binder.ctors:
             if item.is_public:
                 item.parent_name = cls
-                src += generate_ctor(item)
+                src_ctor += generate_ctor(item)
+    if src_ctor:
+        src_ctor.insert(0, '\n// Constructors\n')
+        src += src_ctor
 
     # Fields
-    src.append('\n// Fields\n')
+    src_fields = []
     for item in binder.fields:
         if item.is_public:
             item.parent_name = cls
-            src += generate_field(item)
+            src_fields += generate_field(item)
+    if src_fields:
+        src_fields.insert(0, '\n// Fields\n')
+        src += src_fields
 
     # Methods
-    src.append('\n// Methods\n')
+    src_methods = []
     for item in binder.methods:
         if item.is_public:
             item.parent_name = cls
-            src += generate_method(item)
+            src_methods += generate_method(item)
+    if src_methods:
+        src_methods.insert(0, '\n// Methods\n')
+        src += src_methods
 
     # Check for an iterable type and add __iter__
     if binder.is_maybe_iterable:
@@ -2475,11 +2373,14 @@ def generate_class(binder):
             cls, qname)
 
     # Enums
-    src.append('\n// Enums\n')
+    src_enums = []
     for item in binder.enums:
         if item.is_public:
             item.parent_name = cls
-            src += generate_enum(item)
+            src_enums += generate_enum(item)
+    if src_enums:
+        src_enums.insert(0, '\n// Enums\n')
+        src += src_enums
 
     # Nested classes
     has_nested = False
