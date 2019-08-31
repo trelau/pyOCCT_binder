@@ -242,26 +242,26 @@ class Generator(object):
                 if line.startswith('+header'):
                     line = line.replace('+header', '')
                     line = line.strip()
-                    type_, header = line.split(':')
-                    type_ = type_.strip()
+                    mod, header = line.split(':')
+                    mod = mod.strip()
                     header = header.strip()
-                    if type_ in self.plus_headers:
-                        self.plus_headers[type_].append(header)
+                    if mod in self.plus_headers:
+                        self.plus_headers[mod].append(header)
                     else:
-                        self.plus_headers[type_] = [header]
+                        self.plus_headers[mod] = [header]
                     continue
 
                 # Minus headers
                 if line.startswith('-header'):
                     line = line.replace('-header', '')
                     line = line.strip()
-                    type_, header = line.split(':')
-                    type_ = type_.strip()
+                    mod, header = line.split(':')
+                    mod = mod.strip()
                     header = header.strip()
-                    if type_ in self.minus_headers:
-                        self.minus_headers[type_].append(header)
+                    if mod in self.minus_headers:
+                        self.minus_headers[mod].append(header)
                     else:
-                        self.minus_headers[type_] = [header]
+                        self.minus_headers[mod] = [header]
                     continue
 
                 # Python names
@@ -877,13 +877,32 @@ class Module(object):
         :return: None.
         """
         self.includes = ['pyOCCT_Common.hxx']
+
+        # Excluded headers per module
+        minus_headers = set()
+        if self.name in Generator.minus_headers:
+            minus_headers = set(Generator.minus_headers[self.name])
+
+        # Extra headers per module
+        if self.name in Generator.plus_headers:
+            for inc in Generator.plus_headers[self.name]:
+                if inc not in self.includes:
+                    self.includes.append(inc)
+
+        # Headers for binders in module
         all_binders = self.sorted_binders + self.templates
         for binder in all_binders:
             binders = [binder] + binder.grouped_binders
             for binder_ in binders:
                 temp = binder_.build_includes()
+                # Don't add includes for class templates since they are in a
+                # different file
+                if binder_.is_class_template:
+                    continue
                 for f in temp:
-                    if f not in self.includes:
+                    if (f not in self.includes and
+                            f not in minus_headers and
+                            f not in Generator.excluded_headers):
                         self.includes.append(f)
 
     def is_dependent(self, other):
@@ -974,6 +993,15 @@ class Module(object):
             fout.write('#include <{}>\n'.format(inc))
         fout.write('\n')
 
+        # Write opaque types
+        has_opaque = False
+        for binder in binders:
+            for opaque in binder.opaque:
+                has_opaque = True
+                fout.write(opaque)
+        if has_opaque:
+            fout.write('\n')
+
         # Initialize
         fout.write('PYBIND11_MODULE({}, mod) {{\n\n'.format(self.name))
 
@@ -1036,6 +1064,7 @@ class CursorBinder(object):
         self.grouped_binders = []
         self.skip = False
         self.src = []
+        self.opaque = []
 
         # Filename
         try:
@@ -1444,8 +1473,6 @@ class CursorBinder(object):
         else:
             name = self.qualified_spelling
         name = name.replace('::', '_')
-        # name = name.replace('::', '<')
-        # name = name.replace('::', '>')
         return name
 
     @python_name.setter
@@ -1806,7 +1833,7 @@ class CursorBinder(object):
             # Add include
             self.includes.append(inc)
 
-        return includes
+        return self.includes
 
     def bind(self, path):
         """
@@ -2039,6 +2066,7 @@ def bind_typedef(binder):
         other_src.insert(0, '/*\n')
         other_src.append('*/\n')
     src += other_src
+    src.append('\n')
 
     # Include template if needed
     extra_headers = []
@@ -2048,8 +2076,9 @@ def bind_typedef(binder):
         if template in Generator.available_templates:
             extra_headers.append(template + '.hxx')
 
-    src = extra + src
-    src.append('\n')
+    # Add opaque defs
+    for txt in extra:
+        binder.opaque.append(txt)
 
     binder.src = src
     return extra_headers
@@ -2247,7 +2276,10 @@ def generate_class(binder):
     docs = binder.docs
 
     # Source variable
-    cls = '_'.join(['cls', name])
+    if binder.is_nested:
+        cls = '_'.join(['cls', binder.parent.python_name, name])
+    else:
+        cls = '_'.join(['cls', name])
 
     # Holder
     if binder.is_transient:
@@ -2607,71 +2639,6 @@ def generate_method(binder):
     return methods
 
 
-def generate_typedef(binder):
-    """
-    Generate source for a typedef.
-
-    :param binder.core.CursorBinder binder: The binder.
-
-    :return: Binder source as a list of lines and extra headers if needed.
-    :rtype: tuple(list(str), list(str))
-    """
-    # Bind an alias
-    alias = binder.alias
-    this_module = binder.module_name
-    if alias is not None:
-        # Only bind if alias is a record
-        if not alias.type.get_canonical().is_record:
-            logger.write(
-                '\tNot binding typedef: {}\n'.format(binder.python_name))
-            return [], [], []
-        other_mod = alias.module_name
-        if other_mod == this_module:
-            src = [
-                'if (py::hasattr(mod, \"{}\")) {{\n'.format(alias.python_name),
-                '\tmod.attr(\"{}\") = mod.attr(\"{}\");\n'.format(
-                    binder.python_name, alias.python_name),
-                '}\n'
-            ]
-        else:
-            src = [
-                'py::module other_mod = py::module::import(\"{}.{}\");\n'.format(
-                    Generator.package_name, other_mod),
-                'if (py::hasattr(other_mod, \"{}\")) {{\n'.format(
-                    alias.python_name),
-                '\tmod.attr(\"{}\") = other_mod.attr(\"{}\");\n'.format(
-                    binder.python_name, alias.python_name),
-                '}\n'
-            ]
-        return src, None, []
-
-    # Bind class
-    # type_ = binder.underlying_typedef_type.get_canonical()
-    type_ = binder.type.get_canonical()
-    decl = type_.get_declaration()
-    template = decl.get_specialization()
-    if type_.is_record and template.is_class_template:
-        if type_.spelling.startswith('std::vector'):
-            txt = type_.spelling, binder.parent_name, binder.python_name
-            src = ['py::bind_vector<{}>({}, \"{}\");\n'.format(*txt)]
-            extra = ['PYBIND11_MAKE_OPAQUE({})\n\n'.format(txt[0])]
-            return src, [], extra
-        else:
-            src = ['bind_{}({}, \"{}\");\n'.format(type_.spelling,
-                                                   binder.parent_name,
-                                                   binder.python_name)]
-            return src, ['bind_{}'.format(decl.spelling)], []
-
-    elif type_.is_record and decl.is_class:
-        decl.python_name = binder.spelling
-        src = generate_class(decl)
-        return src, [], []
-
-    logger.write(
-        '\tNot binding typedef: {}\n'.format(binder.python_name))
-    return [], [], []
-
-
 def generate_typedef2(binder):
     """
     Generate source for a typedef.
@@ -2704,7 +2671,7 @@ def generate_typedef2(binder):
         if type_.spelling.startswith('std::vector'):
             txt = type_.spelling, binder.parent_name, binder.python_name
             src = ['py::bind_vector<{}>({}, \"{}\");\n'.format(*txt)]
-            extra = ['PYBIND11_MAKE_OPAQUE({})\n\n'.format(txt[0])]
+            extra = ['PYBIND11_MAKE_OPAQUE({})\n'.format(txt[0])]
             return src, [], extra
         else:
             src = ['bind_{}({}, \"{}\"{});\n'.format(type_.spelling,

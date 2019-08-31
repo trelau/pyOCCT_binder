@@ -22,22 +22,6 @@
 
 -class FT_Vector
 
--class OpenGl_BVHClipPrimitiveSet
--class OpenGl_BVHClipPrimitiveTrsfPersSet
--class OpenGl_CappingAlgoFilter
--class OpenGl_GraduatedTrihedron
--class OpenGl_Layer
--class OpenGl_LayerList
--class OpenGl_Group
--class OpenGl_LineAttributes
--class OpenGl_RaytraceFilter
--class OpenGl_RaytraceGeometry
--class OpenGl_RaytraceMaterial
--class OpenGl_StencilTest
--class OpenGl_Structure
--class OpenGl_VariableSetterSelector
--class OpenGl_View
-
 -class ShapePersistent_BRep
 -class ShapePersistent_Geom
 -class ShapePersistent_Geom_Curve
@@ -46,8 +30,6 @@
 -class ShapePersistent_Geom2d_Curve
 -class ShapePersistent_Poly
 -class ShapePersistent_TopoDS
-
--class Standard_ErrorHandler::Callback
 
 -class StdStorage_Bucket
 -class StdStorage_BucketIterator
@@ -96,6 +78,8 @@
 -typedef TNaming_DataMapOfShapePtrRefShape
 
 -typedef TopOpeBRepTool_IndexedDataMapOfSolidClassifier
+
+-typedef XmlObjMgt_DOMString
 
 # Excluded functions ----------------------------------------------------------
 -function* operator new_
@@ -191,7 +175,6 @@
 -function GCPnts_DistFunction2d::GCPnts_DistFunction2d(const GCPnts_DistFunction2d &)
 
 -function Geom2dAPI_Interpolate::ClearTangents
-
 
 -function Geom2dGcc_FunctionTanCuCuCu::Geom2dGcc_FunctionTanCuCuCu(const gp_Circ2d &, const Geom2dAdaptor_Curve &, const gp_Pnt2d &)
 -function Geom2dGcc_FunctionTanCuCuCu::Geom2dGcc_FunctionTanCuCuCu(const gp_Lin2d &, const Geom2dAdaptor_Curve &, const gp_Pnt2d &)
@@ -459,167 +442,104 @@
 
 +header BinMXCAFDoc_LocationDriver: BinTools_LocationSet.hxx
 
-+header BOPAlgo_Builder: BOPDS_DS.hxx
-+header BOPAlgo_Tools: BOPDS_DS.hxx
-+header BOPAlgo_PaveFiller: BOPDS_Iterator.hxx
++header BOPAlgo: BOPDS_DS.hxx
++header BOPAlgo: BOPDS_Iterator.hxx
 
-+header BOPDS_DataMapIteratorOfDataMapOfPaveBlockListOfInteger: BOPDS_PaveBlock.hxx
-+header BOPDS_ListIteratorOfListOfPaveBlock: BOPDS_PaveBlock.hxx
++header BOPDS: BOPDS_PaveBlock.hxx
 
-+header BRepAlgoAPI_BuilderAlgo: BOPAlgo_Builder.hxx
++header BRepAlgoAPI: BOPAlgo_Builder.hxx
 
-+header BRepBlend_Chamfer: math_Matrix.hxx
-+header BRepBlend_Chamfer: gp_Lin.hxx
-+header BRepBlend_Chamfer: Blend_Point.hxx
-+header BRepBlend_Chamfer: Adaptor3d_HSurface.hxx
-+header BRepBlend_Chamfer: Adaptor3d_HCurve.hxx
-+header BRepBlend_ChamfInv: Adaptor2d_HCurve2d.hxx
-+header BRepBlend_ChamfInv: math_Matrix.hxx
-+header BRepBlend_ChamfInv: Adaptor3d_HSurface.hxx
-+header BRepBlend_ChamfInv: Adaptor3d_HCurve.hxx
-+header BRepBlend_ChAsym: gp_Lin.hxx
-+header BRepBlend_ChAsym: Blend_Point.hxx
-+header BRepBlend_ChAsym: Adaptor3d_HSurface.hxx
-+header BRepBlend_ChAsym: Adaptor3d_HCurve.hxx
-+header BRepBlend_ChAsymInv: Adaptor2d_HCurve2d.hxx
-+header BRepBlend_ChAsymInv: Adaptor3d_HSurface.hxx
-+header BRepBlend_ChAsymInv: Adaptor3d_HCurve.hxx
-+header BRepBlend_ConstRad: gp_Ax1.hxx
-+header BRepBlend_ConstRad: gp_Circ.hxx
-+header BRepBlend_ConstRad: Blend_Point.hxx
-+header BRepBlend_ConstRad: Adaptor3d_HSurface.hxx
-+header BRepBlend_ConstRad: Adaptor3d_HCurve.hxx
-+header BRepBlend_ConstRadInv: Adaptor2d_HCurve2d.hxx
-+header BRepBlend_ConstRadInv: math_Matrix.hxx
-+header BRepBlend_ConstRadInv: Adaptor3d_HSurface.hxx
-+header BRepBlend_ConstRadInv: Adaptor3d_HCurve.hxx
-+header BRepBlend_CSCircular: math_Matrix.hxx
-+header BRepBlend_CSCircular: gp_Circ.hxx
-+header BRepBlend_CSCircular: Blend_Point.hxx
-+header BRepBlend_CSCircular: Adaptor3d_HSurface.hxx
-+header BRepBlend_CSCircular: Adaptor3d_HCurve.hxx
-+header BRepBlend_CSCircular: Law_Function.hxx
-+header BRepBlend_CSConstRad: math_Matrix.hxx
-+header BRepBlend_CSConstRad: gp_Circ.hxx
-+header BRepBlend_CSConstRad: Blend_Point.hxx
-+header BRepBlend_CSConstRad: Adaptor3d_HSurface.hxx
-+header BRepBlend_CSConstRad: Adaptor3d_HCurve.hxx
-+header BRepBlend_EvolRad: gp_Circ.hxx
-+header BRepBlend_EvolRad: Blend_Point.hxx
-+header BRepBlend_EvolRad: Adaptor3d_HSurface.hxx
-+header BRepBlend_EvolRad: Adaptor3d_HCurve.hxx
-+header BRepBlend_EvolRad: Law_Function.hxx
-+header BRepBlend_EvolRadInv: Adaptor2d_HCurve2d.hxx
-+header BRepBlend_EvolRadInv: math_Matrix.hxx
-+header BRepBlend_EvolRadInv: Adaptor3d_HSurface.hxx
-+header BRepBlend_EvolRadInv: Adaptor3d_HCurve.hxx
-+header BRepBlend_EvolRadInv: Law_Function.hxx
-+header BRepBlend_Ruled: gp_Ax1.hxx
-+header BRepBlend_Ruled: math_Matrix.hxx
-+header BRepBlend_Ruled: Blend_Point.hxx
-+header BRepBlend_Ruled: Adaptor3d_HCurve.hxx
-+header BRepBlend_Ruled: Adaptor3d_HSurface.hxx
-+header BRepBlend_RuledInv: Adaptor2d_HCurve2d.hxx
-+header BRepBlend_RuledInv: math_Matrix.hxx
-+header BRepBlend_RuledInv: Adaptor3d_HSurface.hxx
-+header BRepBlend_RuledInv: Adaptor3d_HCurve.hxx
++header BRepBlend: math_Matrix.hxx
++header BRepBlend: gp_Lin.hxx
++header BRepBlend: Blend_Point.hxx
++header BRepBlend: Adaptor3d_HSurface.hxx
++header BRepBlend: Adaptor3d_HCurve.hxx
++header BRepBlend: Adaptor2d_HCurve2d.hxx
++header BRepBlend: gp_Ax1.hxx
++header BRepBlend: gp_Circ.hxx
++header BRepBlend: Law_Function.hxx
 
-+header BRepBuilderAPI_CellFilter: gp_XY.hxx
-+header BRepBuilderAPI_CellFilter: gp_XYZ.hxx
-+header BRepBuilderAPI_VertexInspector: gp_XY.hxx
-+header BRepBuilderAPI_VertexInspector: gp_XYZ.hxx
++header BRepBuilderAPI: gp_XY.hxx
++header BRepBuilderAPI: gp_XYZ.hxx
 
-+header BRepFill_PipeShell: TopTools_HArray1OfShape.hxx
++header BRepFill: TopTools_HArray1OfShape.hxx
 
-+header BRepGProp_Gauss: BRepGProp_Face.hxx
-+header BRepGProp_Gauss: BRepGProp_Domain.hxx
++header BRepGProp: BRepGProp_Face.hxx
++header BRepGProp: BRepGProp_Domain.hxx
 
-+header BRepMesh_CircleInspector: gp_XY.hxx
-+header BRepMesh_CircleInspector: gp_XYZ.hxx
-+header BRepMesh_VertexInspector: gp_XY.hxx
-+header BRepMesh_VertexInspector: gp_XYZ.hxx
++header BRepMesh: gp_XY.hxx
++header BRepMesh: gp_XYZ.hxx
 
-+header BRepOffsetAPI_Sewing: TopoDS_Edge.hxx
-+header BRepOffsetAPI_Sewing: TopoDS_Face.hxx
-+header BRepOffsetAPI_Sewing: BRepTools_ReShape.hxx
++header BRepOffsetAPI: TopoDS_Edge.hxx
++header BRepOffsetAPI: TopoDS_Face.hxx
++header BRepOffsetAPI: BRepTools_ReShape.hxx
 
 +header BVH_PrimitiveSet<T, N>: bind_BVH_Object.hxx
 +header BVH_Triangulation<T, N>: bind_BVH_PrimitiveSet.hxx
 
-+header Graphic3d_ZLayerSetting: Precision.hxx
++header Graphic3d: Precision.hxx
 
-+header HLRAlgo_Array1OfPHDat: gp_XYZ.hxx
-+header HLRAlgo_HArray1OfPHDat: gp_XYZ.hxx
++header HLRAlgo: gp_XYZ.hxx
 
-+header IntPatch_SearchPnt: Intf_Polygon2d.hxx
++header IntPatch: Intf_Polygon2d.hxx
 
-+header IntPolyh_PMaillageAffinage: IntPolyh_Triangle.hxx
++header IntPolyh: IntPolyh_Triangle.hxx
 
-+header MMgt_TShared: Standard_Type.hxx
++header MMgt: Standard_Type.hxx
 
-+header NCollection_CellFilter_Action: gp_Pnt.hxx
-+header NCollection_CellFilter_InspectorXY: gp_XYZ.hxx
-+header NCollection_CellFilter_InspectorXYZ: gp_XY.hxx
++header NCollection: gp_Pnt.hxx
++header NCollection: gp_XYZ.hxx
++header NCollection: gp_XY.hxx
 
-+header OpenGl_MapOfZLayerSettings: Precision.hxx
++header OpenGl: Precision.hxx
 
 +header PCDM: Storage_BaseDriver.hxx
-+header PCDM_ReadWriter_1: Standard_IStream.hxx
++header PCDM: Standard_IStream.hxx
 
-+header ProjLib_PrjFunc: Adaptor3d_Surface.hxx
-+header ProjLib_PrjFunc: Adaptor3d_Curve.hxx
++header ProjLib: Adaptor3d_Surface.hxx
++header ProjLib: Adaptor3d_Curve.hxx
 
-+header PrsMgr_Prs: PrsMgr_Presentation.hxx
++header PrsMgr: PrsMgr_Presentation.hxx
 
-+header SelectMgr_RectangularFrustum: bind_SelectMgr_Frustum.hxx
-+header SelectMgr_TriangularFrustum: bind_SelectMgr_Frustum.hxx
++header SelectMgr: bind_SelectMgr_Frustum.hxx
 
-+header ShapeFix_Edge: TColStd_HArray1OfReal.hxx
++header ShapeFix: TColStd_HArray1OfReal.hxx
 
--header Standard_MMgrOpt: NCollection_SparseArrayBase.hxx
--header Standard_MMgrRaw: NCollection_SparseArrayBase.hxx
--header Standard_MMgrRoot: NCollection_SparseArrayBase.hxx
--header Standard_MMgrTBBalloc: NCollection_SparseArrayBase.hxx
--header Standard_Persistent: Storage_Schema.hxx
+-header Standard: NCollection_SparseArrayBase.hxx
+-header Standard: NCollection_SparseArrayBase.hxx
+-header Standard: NCollection_SparseArrayBase.hxx
+-header Standard: NCollection_SparseArrayBase.hxx
+-header Standard: Storage_Schema.hxx
 
-+header StdLPersistent_Function: bind_StdObjMgt_Attribute.hxx
-+header StdLPersistent_NamedData: bind_StdObjMgt_Attribute.hxx
-+header StdLPersistent_Real: bind_StdObjMgt_Attribute.hxx
-+header StdLPersistent_Variable: bind_StdObjMgt_Attribute.hxx
-+header StdLPersistent_XLink: bind_StdObjMgt_Attribute.hxx
++header StdLPersistent: bind_StdObjMgt_Attribute.hxx
 
-+header StdPersistent_DataXtd_Constraint: bind_StdObjMgt_Attribute.hxx
-+header StdPersistent_DataXtd_PatternStd: bind_StdObjMgt_Attribute.hxx
++header StdPersistent: bind_StdObjMgt_Attribute.hxx
 
-+header TDocStd_XLinkIterator: TDocStd_XLink.hxx
-+header TDocStd_XLinkRoot: TDocStd_XLink.hxx
++header TDocStd: TDocStd_XLink.hxx
 
-+header TNaming_DataMapIteratorOfDataMapOfShapeMapOfShape: TopoDS_Shape.hxx
-+header TNaming_DataMapOfShapePtrRefShape: TNaming_RefShape.hxx
-+header TNaming_MapIteratorOfMapOfShape: TopoDS_Shape.hxx
++header TNaming: TopoDS_Shape.hxx
++header TNaming: TNaming_RefShape.hxx
 
-+header TObj_HSequenceOfObject: TObj_Object.hxx
++header TObj: TObj_Object.hxx
 
-+header TopOpeBRep_DSFiller: TopOpeBRepTool_ShapeClassifier.hxx
-+header TopOpeBRep_FacesFiller: TopOpeBRepTool_ShapeClassifier.hxx
-+header TopOpeBRep_FFDumper: TopOpeBRep_FacesFiller.hxx
++header TopOpeBRep: TopOpeBRepTool_ShapeClassifier.hxx
++header TopOpeBRep: TopOpeBRep_FacesFiller.hxx
 
-+header TopOpeBRepBuild_BuilderON: TopOpeBRepBuild_WireEdgeSet.hxx
-+header TopOpeBRepBuild_BuilderON: TopOpeBRepBuild_GTopo.hxx
-+header TopOpeBRepBuild_BuilderON: TopOpeBRepBuild_Builder.hxx
++header TopOpeBRepBuild: TopOpeBRepBuild_WireEdgeSet.hxx
++header TopOpeBRepBuild: TopOpeBRepBuild_GTopo.hxx
++header TopOpeBRepBuild: TopOpeBRepBuild_Builder.hxx
 
-+header TopOpeBRepDS_FaceInterferenceTool: TopOpeBRepDS_DataStructure.hxx
-+header TopOpeBRepDS_Filter: TopOpeBRepTool_ShapeClassifier.hxx
++header TopOpeBRepDS: TopOpeBRepDS_DataStructure.hxx
++header TopOpeBRepDS: TopOpeBRepTool_ShapeClassifier.hxx
 
-+header V3d_CircularGrid: V3d_Viewer.hxx
-+header V3d_ListOfViewIterator: V3d_View.hxx
-+header V3d_RectangularGrid: V3d_Viewer.hxx
++header V3d: V3d_Viewer.hxx
++header V3d: V3d_View.hxx
 
-+header XCAFDoc_PartId: TCollection_ExtendedString.hxx
++header XCAFDoc: TCollection_ExtendedString.hxx
 
-+header XmlMXCAFDoc_LocationDriver: TopTools_LocationSet.hxx
++header XmlMXCAFDoc: TopTools_LocationSet.hxx
 
-+header XmlObjMgt_DOMString: LDOM_MemManager.hxx
++header XmlObjMgt: LDOM_MemManager.hxx
 
 # Python names ----------------------------------------------------------------
 +pname AIS_PointCloud::DisplayMode-->enumDisplayMode
