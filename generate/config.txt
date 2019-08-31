@@ -150,6 +150,7 @@
 
 -function BVH_Object<T, N>::BVH_Object<T, N>
 -function BVH_PrimitiveSet<T, N>::BVH_PrimitiveSet<T, N>
+-function BVH_Set<T, N>::BVH_Set<T, N>
 
 -function CDM_Document::operator<<
 -function CDM_MetaData::operator<<
@@ -474,6 +475,8 @@
 +header BRepOffsetAPI: TopoDS_Face.hxx
 +header BRepOffsetAPI: BRepTools_ReShape.hxx
 
++header BVH_Geometry<T, N>: bind_BVH_ObjectSet.hxx
++header BVH_ObjectSet<T, N>: bind_BVH_Set.hxx
 +header BVH_PrimitiveSet<T, N>: bind_BVH_Object.hxx
 +header BVH_Triangulation<T, N>: bind_BVH_PrimitiveSet.hxx
 
@@ -492,6 +495,8 @@
 +header NCollection: gp_XY.hxx
 
 +header OpenGl: Precision.hxx
++header OpenGl: bind_BVH_Geometry.hxx
++header OpenGl: bind_BVH_Set.hxx
 
 +header PCDM: Storage_BaseDriver.hxx
 +header PCDM: Standard_IStream.hxx
@@ -647,8 +652,12 @@
 +skip OpenGl_TextureFormatSelector<GLushort>
 
 # Manual text -----------------------------------------------------------------
++manual BVH_Geometry<T, N>-->bind_BVH_ObjectSet<T, N>(mod, "BVH_Geometry_Base", py::module_local());
++manual BVH_ObjectSet<T, N>-->bind_BVH_Set<T, N>(mod, "BVH_ObjectSet_Base", py::module_local());
 +manual BVH_PrimitiveSet<T, N>-->bind_BVH_Object<T, N>(mod, "BVH_PrimitiveSet_Base", py::module_local());
 +manual BVH_Triangulation<T, N>-->bind_BVH_PrimitiveSet<T, N>(mod, "BVH_Triangulation_Base", py::module_local());
++manual OpenGl_BVHClipPrimitiveTrsfPersSet-->bind_BVH_Set<Standard_Real, 3>(mod, "BVH_Set_Standard_Real3", py::module_local());
++manual OpenGl_RaytraceGeometry-->bind_BVH_Geometry<Standard_ShortReal, 3>(mod, "BVH_Geometry_Standard_ShortReal3", py::module_local());
 +manual SelectMgr_RectangularFrustum-->bind_SelectMgr_Frustum<4>(mod, "Select_Mgr_Frustum4", py::module_local());
 +manual SelectMgr_TriangularFrustum-->bind_SelectMgr_Frustum<3>(mod, "Select_Mgr_Frustum3", py::module_local());
 +manual StdLPersistent_Function-->bind_StdObjMgt_Attribute<TFunction_Function>(mod, "StdObjMgt_Attribute_TFunction_Function", py::module_local());
