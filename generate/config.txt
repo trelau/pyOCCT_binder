@@ -4,10 +4,13 @@
 +arg -x
 +arg c++
 +arg -std=c++14
++arg -fms-compatibility
++arg -fms-extensions
 +arg -fms-compatibility-version=19
 +arg -D__CODE_GENERATOR__
 +arg -Wno-deprecated-declarations
 +arg -fdelayed-template-parsing
++arg -ferror-limit=0
 
 # Immutable types -------------------------------------------------------------
 +immutable Standard_Boolean
@@ -16,6 +19,8 @@
 +immutable Standard_Real
 
 # Excluded classes ------------------------------------------------------------
+-class AIS_LocalStatus
+
 -class Cocoa_LocalPool
 
 -class Font_BRepFont
@@ -40,9 +45,14 @@
 -class Storage_BucketOfPersistent
 
 # Excluded typedefs -----------------------------------------------------------
+-typedef BinMDF_TypeIdMap
+
 -typedef BinObjMgt_PByte
 
 -typedef BRepBuilderAPI_CellFilter
+
+-typedef BOPTools_Box2dPairSelector
+-typedef BOPTools_BoxPairSelector
 
 -typedef BVH_EncodedLink
 
@@ -55,6 +65,8 @@
 -typedef Graphic3d_NMapOfTransient
 
 -typedef IntSurf_Allocator
+
+-typedef Media_HMutex
 
 -typedef MeshVS_TwoColors
 -typedef MeshVS_NodePair
@@ -73,6 +85,7 @@
 -typedef Standard_SStream
 -typedef Standard_IStream
 
+-typedef TDF_AttributeDoubleMap
 -typedef TDF_HAllocator
 
 -typedef TNaming_DataMapOfShapePtrRefShape
@@ -107,6 +120,12 @@
 
 -function BRepAlgo_DSAccess::IsDeleted
 
+-function BRepMeshData_Curve::BRepMeshData_Curve
+-function BRepMeshData_Edge::BRepMeshData_Edge
+-function BRepMeshData_Face::BRepMeshData_Face
+-function BRepMeshData_PCurve::BRepMeshData_PCurve
+-function BRepMeshData_Wire::BRepMeshData_Wire
+
 -function BRepApprox_Approx::Perform()
 -function BRepApprox_ResConstraintOfMyGradientOfTheComputeLineBezierOfApprox::Error
 -function BRepApprox_ResConstraintOfMyGradientbisOfTheComputeLineOfApprox::Error
@@ -124,6 +143,7 @@
 
 -function BRepGProp_VinertGK::GetAbsolutError
 
+-function BRepMesh_ConeRangeSplitter::GetSplitSteps
 -function BRepMesh_DataStructureOfDelaun::ElementNodes
 -function BRepMesh_Delaun::Frontier
 -function BRepMesh_Delaun::InternalEdges
@@ -134,6 +154,9 @@
 -function BRepMesh_EdgeTessellationExtractor::BRepMesh_EdgeTessellationExtractor
 -function BRepMesh_IncrementalMesh::Discret_
 -function BRepMesh_GeomTool::IntLinLin_
+-function BRepMesh_MeshTool::AddTriangle
+-function BRepMesh_MeshTool::DumpTriangles
+-function BRepMesh_MeshTool::EraseTriangles(const IMeshData::MapOfInteger &, IMeshData::MapOfIntegerInteger &)
 -function BRepMesh_Triangle::BRepMesh_Triangle(const Standard_Integer (&)[3], const Standard_Boolean (&)[3], const BRepMesh_DegreeOfFreedom)
 -function BRepMesh_Triangle::Initialize
 -function BRepMesh_Triangle::Edges
@@ -241,6 +264,21 @@
 -function IGESSelect_SelectBasicGeom::CurvesOnly
 
 -function IGESToBRep_TopoSurface::TransferPlaneSurface
+
+-function Media_BufferPool::GetBuffer
+-function Media_CodecContext::Init
+-function Media_CodecContext::Context
+-function Media_FormatContext::Context
+-function Media_FormatContext::SecondsToUnits_
+-function Media_FormatContext::Stream
+-function Media_FormatContext::StreamInfo
+-function Media_FormatContext::StreamSecondsToUnits_
+-function Media_FormatContext::StreamUnitsToSeconds_
+-function Media_FormatContext::UnitsToSeconds_
+-function Media_Frame::ChangeFrame
+-function Media_Frame::Frame
+-function Media_Packet::ChangePacket
+-function Media_Packet::Packet
 
 -function MyDirectPolynomialRoots::MyDirectPolynomialRoots
 
@@ -441,7 +479,9 @@
 -header* glext.h
 -header* NCollection_Shared.hxx
 
-+header BinMXCAFDoc_LocationDriver: BinTools_LocationSet.hxx
++header BinMXCAFDoc: BinTools_LocationSet.hxx
+
++header BRepMesh: IMeshData_Wire.hxx
 
 +header BOPAlgo: BOPDS_DS.hxx
 +header BOPAlgo: BOPDS_Iterator.hxx
@@ -483,6 +523,8 @@
 +header Graphic3d: Precision.hxx
 
 +header HLRAlgo: gp_XYZ.hxx
+
++header IMeshTools: IMeshData_Face.hxx
 
 +header IntPatch: Intf_Polygon2d.hxx
 
@@ -595,6 +637,8 @@
 -field OpenGl_Context::core43back
 -field OpenGl_Context::core44
 -field OpenGl_Context::core44back
+
+-field RWGltf_GltfSharedIStream::Stream
 
 -field VrmlData_InBuffer::Input
 

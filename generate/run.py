@@ -1,6 +1,6 @@
 from binder.core import Generator
 
-main = Generator('../include/opencascade')
+main = Generator('C:/Miniconda/envs/occt740/Library/include/opencascade')
 
 # For debugging and dev
 main.bind_enums = True

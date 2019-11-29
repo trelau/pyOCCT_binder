@@ -1,3 +1,4 @@
 Issues:
 - How to handle types that get reset with "=" in implementation?
 - Error handling types
+- OCCT 7.4.0 missing AIS_LocalStatus.hxx?

@@ -4,7 +4,7 @@ import os
 all_includes = []
 
 occt_mods = set()
-for fin in os.listdir('../include/opencascade'):
+for fin in os.listdir('C:/Miniconda/envs/occt740/Library/include/opencascade'):
     if fin.endswith('.hxx'):
         all_includes.append(fin)
     if '_' in fin:

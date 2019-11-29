@@ -2778,7 +2778,11 @@ def generate_immutable_inout_method(binder, qname):
         interface_txt = '(' + ', '.join(
             [type_ + ' ' + name for type_, name in args]) + ')'
     else:
-        interface_txt = '({} &self{}'.format(binder.parent.type.spelling,
+        if binder.parent.is_class_template:
+            prefix = binder.parent.qualified_name
+        else:
+            prefix = binder.parent.type.spelling
+        interface_txt = '({} &self{}'.format(prefix,
                                              delimiter) + ', '.join(
             [type_ + ' ' + name for type_, name in args]) + ')'
         is_static = False
