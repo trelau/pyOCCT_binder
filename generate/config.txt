@@ -27,8 +27,6 @@
 
 -class FT_Vector
 
--class OpenGl_Layer
-
 -class ShapePersistent_BRep
 -class ShapePersistent_Geom
 -class ShapePersistent_Geom_Curve
@@ -76,6 +74,8 @@
 -typedef MeshVS_NodePair
 
 -typedef QuadBvhHandle
+
+-typedef OpenGl_Layer
 -typedef OpenGl_ListOfStructure
 -typedef OpenGl_SetterList
 

@@ -1702,6 +1702,20 @@ class CursorBinder(object):
                 return True
         return False
 
+    @property
+    def needs_default_ctor(self):
+        """
+        :return: Check to see if the cursor needs a default constructor.
+        """
+        if self.is_abstract:
+            return False
+        items = [self] + self._all_bases
+        for item in items:
+            item.get_definition()
+            if item.ctors:
+                return False
+        return True
+
     def get_definition(self):
         """
         If the binder is a reference to a declaration or a declaration of
@@ -2373,6 +2387,10 @@ def generate_class(binder):
             if item.is_public:
                 item.parent_name = cls
                 src_ctor += generate_ctor(item)
+    # Check for default constructor
+    if not src_ctor and binder.needs_default_ctor:
+        src_ctor = ['{}.def(py::init<>());\n'.format(cls)]
+
     if src_ctor:
         src_ctor.insert(0, '\n// Constructors\n')
         src += src_ctor
