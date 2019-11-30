@@ -481,6 +481,7 @@
 
 # Headers ---------------------------------------------------------------------
 -header* AdvApp2Var_Data_f2c.hxx
+-header* AIS_LocalStatus.hxx
 -header* glext.h
 -header* NCollection_Shared.hxx
 
@@ -716,6 +717,9 @@
 +nested NCollection_UBTree<TheObjType, TheBndType>::Selector
 
 # Skipped types ---------------------------------------------------------------
++skip AIS_LocalStatus
++skip AIS_DataMapOfSelStat
+
 +skip Graphic3d_UniformValueTypeID<Graphic3d_Vec2>
 +skip Graphic3d_UniformValueTypeID<Graphic3d_Vec2i>
 +skip Graphic3d_UniformValueTypeID<Graphic3d_Vec3>
