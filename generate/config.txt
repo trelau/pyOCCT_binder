@@ -27,6 +27,8 @@
 
 -class FT_Vector
 
+-class OpenGl_Layer
+
 -class ShapePersistent_BRep
 -class ShapePersistent_Geom
 -class ShapePersistent_Geom_Curve
@@ -53,6 +55,8 @@
 
 -typedef BOPTools_Box2dPairSelector
 -typedef BOPTools_BoxPairSelector
+-typedef BOPTools_BoxTree
+-typedef BOPTools_BoxTreeSelector
 
 -typedef BVH_EncodedLink
 
@@ -174,6 +178,7 @@
 -function BVH_Object<T, N>::BVH_Object<T, N>
 -function BVH_PrimitiveSet<T, N>::BVH_PrimitiveSet<T, N>
 -function BVH_Set<T, N>::BVH_Set<T, N>
+-function BVH_Traverse<NumType, Dimension, BVHSetType, MetricType>::BVH_Traverse<NumType, Dimension, BVHSetType, MetricType>
 
 -function CDM_Document::operator<<
 -function CDM_MetaData::operator<<
@@ -488,6 +493,9 @@
 
 +header BOPDS: BOPDS_PaveBlock.hxx
 
++header BOPTools_BoxSet<NumType, Dimension, DataType>: bind_BVH_BoxSet.hxx
++header BOPTools_BoxSelector<Dimension>: bind_BVH_Traverse.hxx
+
 +header BRepAlgoAPI: BOPAlgo_Builder.hxx
 
 +header BRepBlend: math_Matrix.hxx
@@ -515,11 +523,14 @@
 +header BRepOffsetAPI: TopoDS_Face.hxx
 +header BRepOffsetAPI: BRepTools_ReShape.hxx
 
++header BVH_Traverse<NumType, Dimension, BVHSetType, MetricType>: bind_BVH_BaseTraverse.hxx
++header BVH_BoxSet<NumType, Dimension, DataType>: bind_BVH_PrimitiveSet.hxx
 +header BVH_Geometry<T, N>: bind_BVH_ObjectSet.hxx
 +header BVH_ObjectSet<T, N>: bind_BVH_Set.hxx
 +header BVH_PrimitiveSet<T, N>: bind_BVH_Object.hxx
 +header BVH_Triangulation<T, N>: bind_BVH_PrimitiveSet.hxx
 
++header Graphic3d: bind_BVH_Set.hxx
 +header Graphic3d: Precision.hxx
 
 +header HLRAlgo: gp_XYZ.hxx
@@ -596,6 +607,7 @@
 +nodelete TDF_LabelNode
 
 # Excluded base classes -------------------------------------------------------
+-base BRepExtrema_OverlapTool: BVH_PairTraverse<Standard_Real, 3>
 -base LDOM_OSStream: Standard_OStream
 -base LDOM_SBuffer: std::streambuf
 -base OpenGl_GlCore13: OpenGl_GlCore12
@@ -648,6 +660,7 @@
 -import GeomAdaptor: GeomEvaluator
 -import Geom2dAdaptor: Geom2dEvaluator
 -import NCollection: gp
+-import Prs3d: PrsMgr
 -import Select3D: SelectMgr
 -import StdObject: StdPersistent
 -import StdObject: ShapePersistent
@@ -656,19 +669,43 @@
 
 # Import guards ---------------------------------------------------------------
 +iguard Font: Graphic3d
++iguard Graphic3d: Select3D
 +iguard LDOMBasicString: LDOM
 +iguard LDOMString: LDOM
 +iguard LDOMParser: LDOM
++iguard Media: Graphic3d
 +iguard SelectBasics: Select3D
++iguard Standard: TCollection
 +iguard StepRepr: StepShape
 
 # Call guards -----------------------------------------------------------------
 +cguard Font_TextFormatter::SetupAlignment-->Graphic3d
 +cguard Font_BRepTextBuilder::Perform-->Graphic3d
+
++cguard Graphic3d_BvhCStructureSetTrsfPers::Graphic3d_BvhCStructureSetTrsfPers-->Select3D
++cguard Graphic3d_BvhCStructureSetTrsfPers::Builder-->Select3D
++cguard Graphic3d_BvhCStructureSetTrsfPers::SetBuilder-->Select3D
++cguard Graphic3d_Layer::Graphic3d_Layer-->Select3D
++cguard Graphic3d_Layer::FrustumCullingBVHBuilder-->Select3D
++cguard Graphic3d_Layer::SetFrustumCullingBVHBuilder-->Select3D
+
 +cguard LDOMBasicString::LDOMBasicString-->LDOM
+
 +cguard LDOMString::getOwnerDocument-->LDOM
+
 +cguard LDOMParser::getDocument-->LDOM
+
++cguard Media_Frame::Size-->Graphic3d
++cguard Media_Scaler::Init-->Graphic3d
+
 +cguard SelectBasics_SensitiveEntity::BoundingBox-->Select3D
+
++cguard Standard_Dump::Text-->TCollection
++cguard Standard_Dump::FormatJson-->TCollection
++cguard Standard_Dump::GetPointerPrefix-->TCollection
++cguard Standard_Dump::GetPointerInfo-->TCollection
++cguard Standard_Dump::DumpKeyToClass-->TCollection
+
 +cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI-->StepShape
 +cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI::SetQualifiedRepresentationItem-->StepShape
 +cguard StepRepr_ReprItemAndMeasureWithUnitAndQRI::GetQualifiedRepresentationItem-->StepShape
@@ -696,18 +733,29 @@
 +skip OpenGl_TextureFormatSelector<GLushort>
 
 # Manual text -----------------------------------------------------------------
++manual BOPTools_BoxSet<NumType, Dimension, DataType>-->bind_BVH_BoxSet<NumType, Dimension, DataType>(mod, "BOPTools_BoxSet_Base", py::module_local());
++manual BOPTools_BoxSelector<Dimension>-->bind_BVH_Traverse<Standard_Real, Dimension, BVH_BoxSet<Standard_Real, Dimension, Standard_Integer>, Standard_Boolean>(mod, "BOPTools_BoxSelector_Base", py::module_local());
+
++manual BVH_Traverse<NumType, Dimension, BVHSetType, MetricType>-->bind_BVH_BaseTraverse<MetricType>(mod, "BVH_Traverse_Base", py::module_local());
++manual BVH_BoxSet<NumType, Dimension, DataType>-->bind_BVH_PrimitiveSet<NumType, Dimension>(mod, "BVH_BoxSet_Base", py::module_local());
 +manual BVH_Geometry<T, N>-->bind_BVH_ObjectSet<T, N>(mod, "BVH_Geometry_Base", py::module_local());
 +manual BVH_ObjectSet<T, N>-->bind_BVH_Set<T, N>(mod, "BVH_ObjectSet_Base", py::module_local());
 +manual BVH_PrimitiveSet<T, N>-->bind_BVH_Object<T, N>(mod, "BVH_PrimitiveSet_Base", py::module_local());
 +manual BVH_Triangulation<T, N>-->bind_BVH_PrimitiveSet<T, N>(mod, "BVH_Triangulation_Base", py::module_local());
+
++manual Graphic3d_BvhCStructureSetTrsfPers-->bind_BVH_Set<Standard_Real, 3>(mod, "BVH_Set_Standard_Real3", py::module_local());
+
 +manual OpenGl_BVHClipPrimitiveTrsfPersSet-->bind_BVH_Set<Standard_Real, 3>(mod, "BVH_Set_Standard_Real3", py::module_local());
 +manual OpenGl_RaytraceGeometry-->bind_BVH_Geometry<Standard_ShortReal, 3>(mod, "BVH_Geometry_Standard_ShortReal3", py::module_local());
+
 +manual SelectMgr_RectangularFrustum-->bind_SelectMgr_Frustum<4>(mod, "Select_Mgr_Frustum4", py::module_local());
 +manual SelectMgr_TriangularFrustum-->bind_SelectMgr_Frustum<3>(mod, "Select_Mgr_Frustum3", py::module_local());
+
 +manual StdLPersistent_Function-->bind_StdObjMgt_Attribute<TFunction_Function>(mod, "StdObjMgt_Attribute_TFunction_Function", py::module_local());
 +manual StdLPersistent_NamedData-->bind_StdObjMgt_Attribute<TDataStd_NamedData>(mod, "StdObjMgt_Attribute_TDataStd_NamedData", py::module_local());
 +manual StdLPersistent_Real-->bind_StdObjMgt_Attribute<TDataStd_Real>(mod, "StdObjMgt_Attribute_TDataStd_Real", py::module_local());
 +manual StdLPersistent_Variable-->bind_StdObjMgt_Attribute<TDataStd_Variable>(mod, "StdObjMgt_Attribute_TDataStd_Variable", py::module_local());
 +manual StdLPersistent_XLink-->bind_StdObjMgt_Attribute<TDocStd_XLink>(mod, "StdObjMgt_Attribute_TDocStd_XLink", py::module_local());
+
 +manual StdPersistent_DataXtd_Constraint-->bind_StdObjMgt_Attribute<TDataXtd_Constraint>(mod, "StdObjMgt_Attribute_TDataXtd_Constraint", py::module_local());
 +manual StdPersistent_DataXtd_PatternStd-->bind_StdObjMgt_Attribute<TDataXtd_PatternStd>(mod, "StdObjMgt_Attribute_TDataXtd_PatternStd", py::module_local());
