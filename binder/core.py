@@ -2075,10 +2075,12 @@ def bind_typedef(binder):
     # Generate source
     other_src, bind_template, extra = generate_typedef2(binder)
 
-    # Comment if excluded
+    # Comment if excluded (check if already commented in case the typedef is an
+    # already commented out class definition.
     if binder.is_excluded:
         other_src.insert(0, '/*\n')
-        other_src.append('*/\n')
+        if other_src[-1] != '*/\n':
+            other_src.append('*/\n')
     src += other_src
     src.append('\n')
 

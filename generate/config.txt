@@ -21,11 +21,41 @@
 # Excluded classes ------------------------------------------------------------
 -class AIS_LocalStatus
 
+-class BRepMesh_ConeRangeSplitter
+-class BRepMesh_CylinderRangeSplitter
+-class BRepMesh_DefaultRangeSplitter
+-class BRepMesh_SphereRangeSplitter
+-class BRepMesh_TorusRangeSplitter
+-class BRepMesh_UVParamRangeSplitter
+-class BRepMesh_NURBSRangeSplitter
+-class BRepMesh_BoundaryParamsRangeSplitter
+
 -class Cocoa_LocalPool
 
 -class Font_BRepFont
 
 -class FT_Vector
+
+-class Graphic3d_BvhCStructureSet
+-class Graphic3d_BvhCStructureSetTrsfPers
+-class Graphic3d_Layer
+
+-class OpenGl_GraduatedTrihedron
+-class OpenGl_LayerList
+-class OpenGl_RaytraceGeometry
+-class OpenGl_RaytraceMaterial
+-class OpenGl_StencilTest
+-class OpenGl_Structure
+-class OpenGl_StructureShadow
+-class OpenGl_View
+-class OpenGl_ShaderProgram
+-class OpenGl_Workspace
+-class OpenGl_VariableSetterSelector
+-class OpenGl_LineAttributes
+
+-class PCDM_DOMHeaderParser
+
+-class RWObj_MtlReader
 
 -class ShapePersistent_BRep
 -class ShapePersistent_Geom
@@ -152,15 +182,20 @@
 -function BRepMesh_Delaun::Frontier
 -function BRepMesh_Delaun::InternalEdges
 -function BRepMesh_Delaun::FreeEdges
+-function BRepMesh_Delaun::ProcessConstraints
+-function BRepMesh_EdgeDiscret::operator()
 -function BRepMesh_EdgeParameterProvider::BRepMesh_EdgeParameterProvider
 -function BRepMesh_EdgeParameterProvider::Parameter
 -function BRepMesh_EdgeTessellator::BRepMesh_EdgeTessellator
 -function BRepMesh_EdgeTessellationExtractor::BRepMesh_EdgeTessellationExtractor
+-function BRepMesh_FaceChecker::operator()
+-function BRepMesh_FaceDiscret::operator()
 -function BRepMesh_IncrementalMesh::Discret_
 -function BRepMesh_GeomTool::IntLinLin_
 -function BRepMesh_MeshTool::AddTriangle
 -function BRepMesh_MeshTool::DumpTriangles
 -function BRepMesh_MeshTool::EraseTriangles(const IMeshData::MapOfInteger &, IMeshData::MapOfIntegerInteger &)
+-function BRepMesh_ModelHealer::operator()
 -function BRepMesh_Triangle::BRepMesh_Triangle(const Standard_Integer (&)[3], const Standard_Boolean (&)[3], const BRepMesh_DegreeOfFreedom)
 -function BRepMesh_Triangle::Initialize
 -function BRepMesh_Triangle::Edges
@@ -187,6 +222,7 @@
 -function Cocoa_Window::HView
 -function Cocoa_Window::SetHView
 -function Cocoa_Window::get_type_descriptor_
+-function Cocoa_Window::VirtualKeyFromNative_
 
 -function DsgPrs_RadiusPresentation::Add(const opencascade::handle<Prs3d_Presentation> &, const opencascade::handle<Prs3d_Drawer> &, const TCollection_ExtendedString &, const gp_Pnt &, const gp_Circ &, const Standard_Real, const Standard_Real, const DsgPrs_ArrowSide, const Standard_Boolean, const Standard_Boolean)
 
@@ -391,10 +427,13 @@
 -function OpenGl_TriangleSet::QuadBVH
 -function OpenGl_Workspace::BufferDump
 -function OpenGl_Workspace::ResetAppliedAspect
+-function OpenGl_Group::GlStruct
 
 -function PCDM::FileDriverType_
 -function PCDM_DOMHeaderParser::SetStartElementName
 -function PCDM_DOMHeaderParser::SetEndElementName
+-function PCDM_DOMHeaderParser::startElement
+-function PCDM_DOMHeaderParser::endElement
 
 -function Poly_CoherentTriPtr::Poly_CoherentTriPtr
 
@@ -482,6 +521,8 @@
 # Headers ---------------------------------------------------------------------
 -header* AdvApp2Var_Data_f2c.hxx
 -header* AIS_LocalStatus.hxx
+-header* AIS_DataMapOfSelStat.hxx
+-header* BRepMesh_CustomBaseMeshAlgo.hxx
 -header* glext.h
 -header* NCollection_Shared.hxx
 
