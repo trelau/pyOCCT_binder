@@ -79,6 +79,7 @@ class Generator(object):
     excluded_imports = dict()
     call_guards = dict()
     manual = dict()
+    extra = dict()
 
     _mods = OrderedDict()
 
@@ -355,7 +356,20 @@ class Generator(object):
                         self.manual[qname] = [txt]
                     continue
 
-                # Skipped binders
+                # Extra text
+                if line.startswith('+extra'):
+                    line = line.replace('+extra', '')
+                    line = line.strip()
+                    qname, txt = line.split('-->', 1)
+                    qname = qname.strip()
+                    txt = txt.strip()
+                    if qname in self.extra:
+                        self.extra[qname].append(txt)
+                    else:
+                        self.extra[qname] = [txt]
+                    continue
+
+                # Immutable types
                 if line.startswith('+immutable'):
                     line = line.replace('+immutable', '')
                     line = line.strip()
@@ -2454,6 +2468,13 @@ def generate_class(binder):
             src.insert(i, txt)
             i += 1
         src.insert(i, '\n\n')
+
+    # Extra text for the class
+    if qname in Generator.extra:
+        src.append('\n' + '// Extra' + '\n')
+        for txt in Generator.extra[qname]:
+            src.append(txt)
+            src.append('\n')
 
     # Comment if excluded
     if binder.is_excluded:

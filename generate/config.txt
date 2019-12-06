@@ -539,6 +539,7 @@
 +header BOPTools_BoxSelector<Dimension>: bind_BVH_Traverse.hxx
 
 +header BRepAlgoAPI: BOPAlgo_Builder.hxx
++header BRepAlgoAPI: Message_ProgressIndicator.hxx
 
 +header BRepBlend: math_Matrix.hxx
 +header BRepBlend: gp_Lin.hxx
@@ -804,3 +805,24 @@
 
 +manual StdPersistent_DataXtd_Constraint-->bind_StdObjMgt_Attribute<TDataXtd_Constraint>(mod, "StdObjMgt_Attribute_TDataXtd_Constraint", py::module_local());
 +manual StdPersistent_DataXtd_PatternStd-->bind_StdObjMgt_Attribute<TDataXtd_PatternStd>(mod, "StdObjMgt_Attribute_TDataXtd_PatternStd", py::module_local());
+
+# Extra text ------------------------------------------------------------------
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("Clear", [](BRepAlgoAPI_Algo &self) {return self.Clear(); }, "Clears all warnings and errors, and any data cached by the algorithm. User defined options are not cleared.");
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("SetRunParallel", [](BRepAlgoAPI_Algo &self, const Standard_Boolean theFlag) { return self.SetRunParallel(theFlag); }, "Set the flag of parallel processing if <theFlag> is true the parallel processing is switched on if <theFlag> is false the parallel processing is switched off", py::arg("theFlag"));
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("RunParallel", [](BRepAlgoAPI_Algo &self) {return self.RunParallel(); }, "Returns the flag of parallel processing");
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("SetFuzzyValue", [](BRepAlgoAPI_Algo &self, const Standard_Real theFuzz) { return self.SetFuzzyValue(theFuzz); }, "Sets the additional tolerance", py::arg("theFuzz"));
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("FuzzyValue", [](BRepAlgoAPI_Algo &self) { return self.FuzzyValue(); }, "Returns the additional tolerance");
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("HasErrors", [](BRepAlgoAPI_Algo &self) { return self.HasErrors(); }, "Returns true if algorithm has failed");
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("HasWarnings", [](BRepAlgoAPI_Algo &self) { return self.HasWarnings(); }, "Returns true if algorithm has generated some warning alerts");
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("HasError", [](BRepAlgoAPI_Algo &self, Handle(Standard_Type) &theType) { return self.HasError(theType); }, "Returns true if algorithm has generated error of specified type", py::arg("theType"));
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("HasWarning", [](BRepAlgoAPI_Algo &self, Handle(Standard_Type) &theType) { return self.HasWarning(theType); }, "Returns true if algorithm has generated warning of specified type", py::arg("theType"));
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("ClearWarnings", [](BRepAlgoAPI_Algo &self) { self.ClearWarnings(); }, "Clears the warnings of the algorithm");
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("GetReport", [](BRepAlgoAPI_Algo &self) { const Handle(Message_Report) r = self.GetReport(); return r; }, "Returns report collecting all errors and warnings");
++extra BRepAlgoAPI_Algo-->cls_BRepAlgoAPI_Algo.def("SetProgressIndicator", [](BRepAlgoAPI_Algo &self, const Handle(Message_ProgressIndicator) &pi) {return self.SetProgressIndicator(pi); }, "Set the Progress Indicator object.", py::arg("theObj"));
+
++extra Geom_Surface-->cls_Geom_Surface.def("U1", [](Geom_Surface &self) { Standard_Real U1; Standard_Real U2; Standard_Real V1; Standard_Real V2; self.Bounds(U1, U2, V1, V2); return U1; }, "Returns the parametric bound U1.");
++extra Geom_Surface-->cls_Geom_Surface.def("U2", [](Geom_Surface &self) { Standard_Real U1; Standard_Real U2; Standard_Real V1; Standard_Real V2; self.Bounds(U1, U2, V1, V2); return U2; }, "Returns the parametric bound U2.");
++extra Geom_Surface-->cls_Geom_Surface.def("V1", [](Geom_Surface &self) { Standard_Real U1; Standard_Real U2; Standard_Real V1; Standard_Real V2; self.Bounds(U1, U2, V1, V2); return V1; }, "Returns the parametric bound V1.");
++extra Geom_Surface-->cls_Geom_Surface.def("V2", [](Geom_Surface &self) { Standard_Real U1; Standard_Real U2; Standard_Real V1; Standard_Real V2; self.Bounds(U1, U2, V1, V2); return V2; }, "Returns the parametric bound V2.");
+
++extra TopoDS_Shape-->cls_TopoDS_Shape.def("__hash__", [](TopoDS_Shape &self) {return self.HashCode(999999); });
