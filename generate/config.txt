@@ -135,6 +135,10 @@
 -function* operator delete[]_
 -function* operator=
 -function* operator->
+-function* begin
+-function* end
+-function* cbegin
+-function* cend
 
 -function AppDef_MultiLine::SetParameter
 -function AppDef_ResConstraintOfMyGradientbisOfBSplineCompute::Error

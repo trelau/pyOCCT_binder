@@ -20,6 +20,7 @@
 import os
 from collections import OrderedDict
 from ctypes import c_uint
+import re
 
 from binder import cymbal
 from binder.clang.cindex import (AccessSpecifier, Index, TranslationUnit,
@@ -44,6 +45,42 @@ cymbal.monkeypatch_cursor('get_overloaded_decl',
                           [Cursor, c_uint], Cursor)
 
 logger = open('log.txt', 'w')
+
+
+class MacroForHandle(object):
+    """
+    Special class for handling of certain macros
+    """
+    relevant_macros = {'DEFINE_HARRAY1',
+                       'DEFINE_HARRAY2',
+                       'DEFINE_HSEQUENCE'}
+
+    macro2func = {'DEFINE_HARRAY1': 'bind_Define_HArray1',
+                  'DEFINE_HARRAY2': 'bind_Define_HArray2',
+                  'DEFINE_HSEQUENCE': 'bind_Define_HSequence'}
+
+    macro2headers = {'DEFINE_HARRAY1': ['bind_Define_HArray1.hxx'],
+                     'DEFINE_HARRAY2': ['bind_Define_HArray2.hxx'],
+                     'DEFINE_HSEQUENCE': ['bind_Define_HSequence.hxx']}
+
+    def __init__(self, macro, type1, type2):
+        self.name = macro
+        self.type1 = type1
+        self.type2 = type2
+
+    def generate(self):
+        """
+        Generate the binding text for a special case macro.
+        """
+        name = self.macro2func[self.name]
+        return '{}<{}, {}>(mod, \"{}\");'.format(name, self.type1, self.type2,
+                                                 self.type1)
+
+    def headers(self):
+        """
+        Return list of extra headers for binding these special macros.
+        """
+        return self.macro2headers[self.name]
 
 
 class Generator(object):
@@ -439,7 +476,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
             logger.write('\tInclude path: {}\n'.format(path))
 
         self._tu = self._indx.parse(file_, args,
-                                    options=TranslationUnit.PARSE_INCOMPLETE)
+                                    options=TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD)
         logger.write('done.\n\n')
 
         self._tu_binder = CursorBinder(self.tu.cursor)
@@ -487,6 +524,18 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
 
         :return: None.
         """
+        available_macros = {}
+        # First gather all the handle macros to handle them specially
+        for binder in self.tu_binder.get_children_of_kind(
+                CursorKind.MACRO_INSTANTIATION):
+            if binder.spelling in MacroForHandle.relevant_macros:
+                tokens = list(binder.cursor.get_tokens())
+                macro = tokens[0].spelling
+                txt = ''.join([t.spelling for t in tokens])
+                type1, type2 = re.findall(r'\((.*)\)', txt)[0].split(',')
+                macro = MacroForHandle(macro, type1, type2)
+                available_macros[type1] = macro
+
         # What to bind
         to_bind = []
         if self.bind_enums:
@@ -581,6 +630,12 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
                 types_log.append(msg)
                 spelling = binder.type.get_canonical().spelling
                 canonical_types[spelling] = binder
+                # Check for macro
+                if qname in available_macros:
+                    binder.macro = available_macros[qname]
+                    msg = '\tFound macro: {}-->{}\n'.format(qname,
+                                                            binder.macro.name)
+                    types_log.append(msg)
             elif binder.is_typedef:
                 mod.types.append(binder)
                 msg = '\tFound typedef: {}\n'.format(qname)
@@ -1079,6 +1134,7 @@ class CursorBinder(object):
         self.skip = False
         self.src = []
         self.opaque = []
+        self.macro = None
 
         # Filename
         try:
@@ -2073,7 +2129,11 @@ def bind_class(binder):
     src.append('\n')
 
     binder.src = src
-    return []
+
+    # Add extra header for special macro case
+    if binder.macro is None:
+        return []
+    return binder.macro.headers()
 
 
 def bind_typedef(binder):
@@ -2294,6 +2354,12 @@ def generate_class(binder):
     :return: Binder source as a list of lines.
     :rtype: list(str)
     """
+    # Special handling of certain macro types
+    macro = binder.macro
+    if macro is not None:
+        src = [macro.generate(), '\n']
+        return src
+
     # Don't bind if it doesn't have any children.
     if len(binder.get_children()) == 0:
         logger.write(
