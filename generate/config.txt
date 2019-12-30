@@ -450,6 +450,8 @@
 -function Resource_Unicode::ConvertUnicodeToFormat_
 
 -function ShapeAnalysis_BoxBndTreeSelector::ShapeAnalysis_BoxBndTreeSelector
+-function ShapeAnalysis_FreeBounds::ConnectEdgesToWires_
+-function ShapeAnalysis_FreeBounds::ConnectWiresToWires_
 
 -function ShapeFix_WireSegment::ShapeFix_WireSegment(const TopoDS_Wire &, const TopAbs_Orientation)
 
@@ -476,6 +478,10 @@
 
 -function TCollection_ExtendedString::ToUTF8CString
 -function TCollection_ExtendedString::ToWideString
+
+-function TDF_Label::FindAttribute
+
+-function TDocStd_Application::Open
 
 -function TNaming_RefShape::FirstUse
 
@@ -507,6 +513,7 @@
 -function VrmlData_Scene::WriteArrIndex
 
 -function XCAFDoc_GeomTolerance::XCAFDoc_GeomTolerance(const opencascade::handle<XCAFDoc_GeomTolerance> &)
+-function XCAFDoc_ShapeTool::FindSubShape
 
 -function XBRepMesh::Discret_
 
@@ -829,4 +836,14 @@
 +extra Geom_Surface-->cls_Geom_Surface.def("V1", [](Geom_Surface &self) { Standard_Real U1; Standard_Real U2; Standard_Real V1; Standard_Real V2; self.Bounds(U1, U2, V1, V2); return V1; }, "Returns the parametric bound V1.");
 +extra Geom_Surface-->cls_Geom_Surface.def("V2", [](Geom_Surface &self) { Standard_Real U1; Standard_Real U2; Standard_Real V1; Standard_Real V2; self.Bounds(U1, U2, V1, V2); return V2; }, "Returns the parametric bound V2.");
 
++extra ShapeAnalysis_FreeBounds-->cls_ShapeAnalysis_FreeBounds.def_static("ConnectEdgesToWires_", [](opencascade::handle<TopTools_HSequenceOfShape> &edges, const Standard_Real toler, const Standard_Boolean shared) { opencascade::handle<TopTools_HSequenceOfShape> wires = new TopTools_HSequenceOfShape; ShapeAnalysis_FreeBounds::ConnectEdgesToWires(edges, toler, shared, wires); return wires; }, "Builds sequnce of <wires> out of sequence of not sorted <edges>. Tries to build wires of maximum length. Building a wire is stopped when no edges can be connected to it at its head or at its tail.", py::arg("edges"), py::arg("toler"), py::arg("shared"));
++extra ShapeAnalysis_FreeBounds-->cls_ShapeAnalysis_FreeBounds.def_static("ConnectWiresToWires_", [](opencascade::handle<TopTools_HSequenceOfShape> &iwires, const Standard_Real toler, const Standard_Boolean shared) { opencascade::handle<TopTools_HSequenceOfShape> owires = new TopTools_HSequenceOfShape; ShapeAnalysis_FreeBounds::ConnectWiresToWires(iwires, toler, shared, owires); return owires; }, "Builds sequnce of <owires> out of sequence of not sorted <iwires>.Tries to build wires of maximum length.Building a wire is stopped when no wires can be connected to it at its head or at its tail.", py::arg("iwires"), py::arg("toler"), py::arg("shared"));
++extra ShapeAnalysis_FreeBounds-->cls_ShapeAnalysis_FreeBounds.def_static("ConnectWiresToWires_", [](opencascade::handle<TopTools_HSequenceOfShape> &iwires, const Standard_Real toler, const Standard_Boolean shared, TopTools_DataMapOfShapeShape &vertices) { opencascade::handle<TopTools_HSequenceOfShape> owires = new TopTools_HSequenceOfShape; ShapeAnalysis_FreeBounds::ConnectWiresToWires(iwires, toler, shared, owires, vertices); return owires; }, "Builds sequnce of <owires> out of sequence of not sorted <iwires>. Tries to build wires of maximum length. Building a wire is stopped when no wires can be connected to it at its head or at its tail.", py::arg("iwires"), py::arg("toler"), py::arg("shared"), py::arg("vertices"));
+
++extra TDF_Label-->cls_TDF_Label.def("FindAttribute", [](TDF_Label &self, const Standard_GUID &anID, opencascade::handle<TDF_Attribute> &anAttribute) {Standard_Boolean status = self.FindAttribute(anID, anAttribute); return std::tuple<Standard_Boolean, opencascade::handle<TDF_Attribute>>(status, anAttribute); }, "Finds an attribute of the current label, according to <anID>. If anAttribute is not a valid one, false is returned.", py::arg("anID"), py::arg("anAttribute"));
+
++extra TDocStd_Application-->cls_TDocStd_Application.def("Open", [](TDocStd_Application &self, const TCollection_ExtendedString &path, opencascade::handle<TDocStd_Document> &aDoc) {PCDM_ReaderStatus status = self.Open(path, aDoc);  return std::tuple<PCDM_ReaderStatus, opencascade::handle<TDocStd_Document>>(status, aDoc); }, "Retrieves the document aDoc stored under the name aName in the directory directory. In order not to override a version of aDoc which is already in memory, this method can be made to depend on the value returned by IsInSession.", py::arg("path"), py::arg("aDoc"));
+
 +extra TopoDS_Shape-->cls_TopoDS_Shape.def("__hash__", [](TopoDS_Shape &self) {return self.HashCode(999999); });
+
++extra XCAFDoc_ShapeTool-->cls_XCAFDoc_ShapeTool.def("FindSubShape", [](XCAFDoc_ShapeTool &self, const TDF_Label &shapeL, const TopoDS_Shape &sub) { TDF_Label L; Standard_Boolean status = self.FindSubShape(shapeL, sub, L); return std::tuple<Standard_Boolean, TDF_Label>(status, L); }, "Finds a label for subshape of shape stored on label shapeL Returns Null label if it is not found", py::arg("shapeL"), py::arg("sub"));
