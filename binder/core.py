@@ -1018,14 +1018,13 @@ class Module(object):
         :return:
         """
         # Create module folder
-        folder = '/'.join([path, 'templates'])
-        if not os.path.isdir(folder):
-            os.makedirs(folder)
+        if not os.path.isdir(path):
+            os.makedirs(path)
 
         # Get ordered binders and generate source
         binders = self.templates
         for binder in binders:
-            binder.bind(folder)
+            binder.bind(path)
 
     def bind(self, path):
         """
@@ -1036,10 +1035,9 @@ class Module(object):
         :return: None.
         """
         # Create module folder and main source file
-        folder = '/'.join([path, 'modules'])
-        if not os.path.isdir(folder):
-            os.makedirs(folder)
-        fname = '/'.join([folder, self.name + '.cxx'])
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        fname = '/'.join([path, self.name + '.cxx'])
         fout = open(fname, 'w')
 
         # File header
@@ -1049,7 +1047,7 @@ class Module(object):
         binders = self.sorted_binders
         extra_headers = []
         for binder in binders:
-            headers = binder.bind(folder)
+            headers = binder.bind(path)
             if headers:
                 extra_headers += headers
 

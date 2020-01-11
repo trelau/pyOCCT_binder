@@ -11,8 +11,8 @@ main.bind_class_templates = True
 
 main.process_config('config.txt')
 
-print('Generate common header file...')
-main.generate_common_header('C:/Users/Trevor/Work/Products/pyOCCT/inc')
+# print('Generate common header file...')
+# main.generate_common_header('C:/Users/Trevor/Work/Products/pyOCCT/inc')
 
 print('Parsing headers...')
 main.parse('all_includes.h')
@@ -34,7 +34,7 @@ print('Checking circular imports...')
 main.check_circular()
 
 print('Binding templates...')
-main.bind_templates('C:/Users/Trevor/Work/Products/pyOCCT/src')
+main.bind_templates('C:/Users/Trevor/Work/Products/pyOCCT/src/occt')
 
 print('Binding...')
-main.bind('C:/Users/Trevor/Work/Products/pyOCCT/src')
+main.bind('C:/Users/Trevor/Work/Products/pyOCCT/src/occt')
