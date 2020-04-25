@@ -3,7 +3,7 @@
 # Clang compiler arguments ----------------------------------------------------
 +arg -x
 +arg c++
-+arg -std=c++14
++arg -std=c++17
 +arg -fms-compatibility
 +arg -fms-extensions
 +arg -fms-compatibility-version=19
@@ -184,6 +184,10 @@
 -function BRepGProp_VinertGK::GetAbsolutError
 
 -function BRepMesh_ConeRangeSplitter::GetSplitSteps
+
+-function BRepMesh_ConstrainedBaseMeshAlgo::BRepMesh_ConstrainedBaseMeshAlgo
+-function BRepMesh_ConstrainedBaseMeshAlgo::getCellsCount
+
 -function BRepMesh_DataStructureOfDelaun::ElementNodes
 -function BRepMesh_Delaun::Frontier
 -function BRepMesh_Delaun::InternalEdges
@@ -231,6 +235,11 @@
 -function Cocoa_Window::VirtualKeyFromNative_
 
 -function DsgPrs_RadiusPresentation::Add(const opencascade::handle<Prs3d_Presentation> &, const opencascade::handle<Prs3d_Drawer> &, const TCollection_ExtendedString &, const gp_Pnt &, const gp_Circ &, const Standard_Real, const Standard_Real, const DsgPrs_ArrowSide, const Standard_Boolean, const Standard_Boolean)
+
+# Abstract
+#-function Expr_UnaryExpression::Expr_UnaryExpression
+#-function Expr_BinaryExpression::Expr_BinaryExpression
+#-function Expr_SingleRelation::Expr_SingleRelation
 
 -function FilletPoint::FilletPoint
 -function FilletPoint::appendValue
@@ -299,6 +308,11 @@
 -function HLRBRep_ThePolyhedronOfInterCSurf::HasVMinSingularity
 -function HLRBRep_ThePolyhedronOfInterCSurf::HasVMaxSingularity
 
+
+# Abstract
+#-function IFSelect_SelectDeduct:IFSelect_SelectDeduct
+#-function IFSelect_Selection::IFSelect_Selection
+#-function IFSelect_SelectControl::IFSelect_SelectControl
 -function IFSelect_ContextModif::Search
 -function IFSelect_EditForm::NbTouched
 -function IFSelect_IntParam::StaticName
@@ -336,6 +350,7 @@
 -function PeriodicInterval::FirstIntersection
 -function PeriodicInterval::SecondIntersection
 
+
 -function IntCurveSurface_ThePolyhedronOfHInter::HasUMinSingularity
 -function IntCurveSurface_ThePolyhedronOfHInter::HasUMaxSingularity
 -function IntCurveSurface_ThePolyhedronOfHInter::HasVMinSingularity
@@ -370,6 +385,22 @@
 -function IntPolyh_MaillageAffinage::GetFinTT
 
 -function IntTools_PntOnFace::IsValid
+
+
+-function IVtkTools_SubPolyDataFilter::vtkTypeMacro
+-function IVtkTools_DisplayModeFilter::vtkTypeMacro
+-function IVtkTools_ShapeDataSource::vtkTypeMacro
+-function IVtkTools_ShapeObject::vtkTypeMacro
+-function IVtkTools_ShapePicker::vtkTypeMacro
+
+# IDK
+-function IVtkTools_ShapeObject::GetShapeSource_
+-function IVtkTools_ShapeObject::getKey_
+-function IVtkTools_ShapePicker::GetSelectionModes(const IVtk_IShape::Handle &)
+
+# TODO: How can doubl** be cast?
+-function IVtkOCC_ViewerSelector::Pick(double **, const int, const IVtk_IView::Handle &)
+-function IVtkOCC_ShapePickerAlgo::Pick(double **, const int)
 
 -function Law_Interpolate::ClearTangents
 
@@ -407,6 +438,8 @@
 -function MAT2d_CutCurve::Perform(const opencascade::handle<Geom2d_Curve> &, const MAT_Side)
 -function MAT2d_CutCurve::PerformInf
 
+-function MeshVS_DataSource3D::MeshVS_DataSource3D
+
 -function MoniTool_AttrList::GetStringAttribute
 -function MoniTool_CaseData::Text
 -function MoniTool_TypedValue::Internals
@@ -431,6 +464,7 @@
 -function OpenGl_ShaderManager::PushMaterialState
 -function OpenGl_TriangleSet::OpenGl_TriangleSet
 -function OpenGl_TriangleSet::QuadBVH
+-function OpenGl_TriangleSet::Box
 -function OpenGl_Workspace::BufferDump
 -function OpenGl_Workspace::ResetAppliedAspect
 -function OpenGl_Group::GlStruct
@@ -455,7 +489,13 @@
 -function ShapeAnalysis_FreeBounds::ConnectEdgesToWires_
 -function ShapeAnalysis_FreeBounds::ConnectWiresToWires_
 
+# Abstract ctor
+-function ShapeCustom_Modification
+
 -function ShapeFix_WireSegment::ShapeFix_WireSegment(const TopoDS_Wire &, const TopAbs_Orientation)
+
+# Undefined symbol on Linux
+-function ShapeFix_Edge::Context
 
 -function StdPersistent_DataXtd_Constraint::Import
 -function StdPersistent_DataXtd_PatternStd::Import
@@ -466,6 +506,7 @@
 -function StdObject_Location::Import
 
 -function StdSelect_BRepOwner::Set
+#-function StdStorage_TypeData::Instantiator
 
 -function StepData_FreeFormEntity::StepData_FreeFormEntity
 -function StepData_StepReaderData::ReadEnumParam
@@ -531,6 +572,9 @@
 -function XSControl_Vars::GetPoint2d
 -function XSControl_Vars::GetShape
 
+# Unresolved symbol
+-function Xw_Window::DisplayConnection
+
 # Headers ---------------------------------------------------------------------
 -header* AdvApp2Var_Data_f2c.hxx
 -header* AIS_LocalStatus.hxx
@@ -538,6 +582,8 @@
 -header* BRepMesh_CustomBaseMeshAlgo.hxx
 -header* glext.h
 -header* NCollection_Shared.hxx
+
++header Aspect: xTypes.h
 
 +header BinMXCAFDoc: BinTools_LocationSet.hxx
 
@@ -649,11 +695,16 @@
 +header V3d: V3d_Viewer.hxx
 +header V3d: V3d_View.hxx
 
++header IVtkTools: vtkActor.h
++header IVtkTools: vtkRenderer.h
++header IVtkVTK: vtkRenderer.h
+
 +header XCAFDoc: TCollection_ExtendedString.hxx
 
 +header XmlMXCAFDoc: TopTools_LocationSet.hxx
 
 +header XmlObjMgt: LDOM_MemManager.hxx
++header Xw: xTypes.h
 
 # Python names ----------------------------------------------------------------
 +pname AIS_PointCloud::DisplayMode-->enumDisplayMode
@@ -661,6 +712,9 @@
 
 # nodelete option -------------------------------------------------------------
 +nodelete TDF_LabelNode
++nodelete Poly_CoherentTriPtr
++nodelete NCollection_SeqNode
++nodelete NCollection_ListNode
 
 # Excluded base classes -------------------------------------------------------
 -base BRepExtrema_OverlapTool: BVH_PairTraverse<Standard_Real, 3>
@@ -771,6 +825,9 @@
 +nested NCollection_BaseMap::Iterator
 +nested NCollection_UBTree<TheObjType, TheBndType>::Selector
 
+# Classes that need downcasted  -----------------------------------------------
+#+downcast BRepMesh_CurveTessellator
+
 # Skipped types ---------------------------------------------------------------
 +skip AIS_LocalStatus
 +skip AIS_DataMapOfSelStat
@@ -851,3 +908,27 @@
 +extra TopoDS_Shape-->cls_TopoDS_Shape.def("__hash__", [](TopoDS_Shape &self) {return self.HashCode(999999); });
 
 +extra XCAFDoc_ShapeTool-->cls_XCAFDoc_ShapeTool.def("FindSubShape", [](XCAFDoc_ShapeTool &self, const TDF_Label &shapeL, const TopoDS_Shape &sub) { TDF_Label L; Standard_Boolean status = self.FindSubShape(shapeL, sub, L); return std::tuple<Standard_Boolean, TDF_Label>(status, L); }, "Finds a label for subshape of shape stored on label shapeL Returns Null label if it is not found", py::arg("shapeL"), py::arg("sub"));
+
+# Add exception translator
++extra Standard_Failure-->py::register_exception_translator([](std::exception_ptr p) {try {if (p) std::rethrow_exception(p);} catch (const Standard_Failure &e) { PyErr_SetString(PyExc_RuntimeError, e.GetMessageString());}});
+
+# Patches -----------------------------------------------------------------
+
+# Patch parameter for AIS_ManipulatorObjectSequence::Append
++patch AIS: (AIS_ManipulatorObjectSequence::*)(const int &)-->(AIS_ManipulatorObjectSequence::*)(const typename AIS_ManipulatorObjectSequence::value_type &)
+
++patch bind_BVH_Traverse: (const int &)-->(const opencascade::handle<BVH_Tree <NumType, Dimension>>&)
+
++patch IVtkTools: (IVtkOCC_Shape::Handle (-->(opencascade::handle<IVtkOCC_Shape> (
+
+# TDataXtd_ConstraintEnum seems to be missing
++patch TDataXtd: (const int, const opencascade::handle<TNaming_NamedShape> &-->(const TDataXtd_ConstraintEnum, const opencascade::handle<TNaming_NamedShape> &
++patch TDataXtd: (const int, Standard_OStream &)-->(const TDataXtd_ConstraintEnum, Standard_OStream &)
+
+# Standard_UUID is messed up
++patch Standard: py::class_<> cls_GUID(mod, "GUID", "None");-->py::class_<Standard_UUID> cls_Standard_UUID(mod, "Standard_UUID", "None");
++patch Standard: cls_GUID.def(py::init<>());-->cls_Standard_UUID.def(py::init<>());
++patch Standard: cls_GUID.def_readwrite("Data1", &Data1, "None");-->cls_Standard_UUID.def_readwrite("Data1", &Standard_UUID::Data1, "None");
++patch Standard: cls_GUID.def_readwrite("Data2", &Data2, "None");-->cls_Standard_UUID.def_readwrite("Data2", &Standard_UUID::Data2, "None");
++patch Standard: cls_GUID.def_readwrite("Data3", &Data3, "None");-->cls_Standard_UUID.def_readwrite("Data3", &Standard_UUID::Data3, "None");
+
