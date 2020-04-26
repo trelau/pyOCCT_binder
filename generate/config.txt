@@ -917,6 +917,8 @@
 # Patch parameter for AIS_ManipulatorObjectSequence::Append
 +patch AIS: (AIS_ManipulatorObjectSequence::*)(const int &)-->(AIS_ManipulatorObjectSequence::*)(const typename AIS_ManipulatorObjectSequence::value_type &)
 
++patch bind_BOPTools_PairSelector: std::vector<PairIDs>-->std::vector<typename BOPTools_PairSelector<Dimension>::PairIDs>
+
 +patch bind_BVH_Traverse: (const int &)-->(const opencascade::handle<BVH_Tree <NumType, Dimension>>&)
 
 +patch IVtkTools: (IVtkOCC_Shape::Handle (-->(opencascade::handle<IVtkOCC_Shape> (
