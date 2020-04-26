@@ -21,8 +21,8 @@ def get_search_paths():
         path = os.environ.get(env_var)
         if path:
             yield path
-    if sys.platform == 'win32':
-        yield join(os.environ.get('BUILD_PREFIX', '.'), 'Library')
+            if sys.platform == 'win32':
+                yield join(path, 'Library')
     return '.'
 
 # Use conda instead of system lib/includes
