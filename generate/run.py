@@ -139,6 +139,8 @@ def main():
     vtk_include_path = find_vtk_include_dir()
     tbb_include_path = find_tbb_include_dir()
 
+    extra_includes = abspath(join(BINDER_ROOT, 'generate', 'extra_includes'))
+
     if not opencascade_include_path or not exists(opencascade_include_path):
         print(f"ERROR: OpenCASCADE include path does not exist:"
               f"{opencascade_include_path}")
@@ -168,7 +170,7 @@ def main():
     occt_mods = gen_includes(opencascade_include_path, gen_dir)
 
     gen = Generator(occt_mods, opencascade_include_path, clang_include_path,
-                    './extra_includes/', vtk_include_path, tbb_include_path)
+                    extra_includes, vtk_include_path, tbb_include_path)
 
     pyocct_inc = abspath(join(args.pyocct_path, 'inc'))
     pyocct_src = abspath(join(args.pyocct_path, 'src', 'occt'))
