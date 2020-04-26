@@ -1,15 +1,15 @@
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
 from os.path import join, abspath, exists
+
+from binder.core import Generator
 
 # If running outside this folder we need to add this to the syspath
 BINDER_ROOT = os.path.dirname(os.path.dirname(__file__))
 if BINDER_ROOT not in sys.path:
     sys.path.append(BINDER_ROOT)
-
-from binder.core import Generator
 
 
 def get_search_paths():
@@ -25,6 +25,7 @@ def get_search_paths():
                 yield join(path, 'Library')
     return '.'
 
+
 # Use conda instead of system lib/includes
 def find_occt_include_dir():
     for path in get_search_paths():
@@ -33,12 +34,29 @@ def find_occt_include_dir():
             print("Found {}".format(occt_include_dir))
             return occt_include_dir
 
+
 def find_clang_include_dir():
     for path in get_search_paths():
         clang_include_path = join(path, 'lib', 'clang', '10.0.0', 'include')
         if exists(clang_include_path):
             print("Found {}".format(clang_include_path))
             return clang_include_path
+
+
+def find_vtk_include_dir():
+    for path in get_search_paths():
+        vtk_include_path = join(path, 'include', 'vtk-8.2')
+        if exists(vtk_include_path):
+            print("Found {}".format(vtk_include_path))
+            return vtk_include_path
+
+
+def find_tbb_include_dir():
+    for path in get_search_paths():
+        tbb_include_path = join(path, 'Library', 'include')
+        if exists(tbb_include_path):
+            print("Found {}".format(tbb_include_path))
+            return tbb_include_path
 
 
 def gen_includes(opencascade_include_path='../include/opencascade',
@@ -85,9 +103,9 @@ def gen_includes(opencascade_include_path='../include/opencascade',
 
 def main():
     parser = argparse.ArgumentParser()
-    print('='*100)
+    print('=' * 100)
     print("pyOCCT Binder")
-    print('='*100)
+    print('=' * 100)
 
     parser.add_argument(
         '-c',
@@ -118,6 +136,9 @@ def main():
     opencascade_include_path = args.opencascade_include_path or find_occt_include_dir()
     clang_include_path = args.clang_include_path or find_clang_include_dir()
 
+    vtk_include_path = find_vtk_include_dir()
+    tbb_include_path = find_tbb_include_dir()
+
     if not opencascade_include_path or not exists(opencascade_include_path):
         print(f"ERROR: OpenCASCADE include path does not exist:"
               f"{opencascade_include_path}")
@@ -146,7 +167,8 @@ def main():
     gen_dir = abspath(join(BINDER_ROOT, 'generate'))
     occt_mods = gen_includes(opencascade_include_path, gen_dir)
 
-    main = Generator(occt_mods, opencascade_include_path, clang_include_path)
+    gen = Generator(occt_mods, opencascade_include_path, clang_include_path,
+                    './extra_includes/', vtk_include_path, tbb_include_path)
 
     pyocct_inc = abspath(join(args.pyocct_path, 'inc'))
     pyocct_src = abspath(join(args.pyocct_path, 'src', 'occt'))
@@ -161,43 +183,43 @@ def main():
     print(f"Writing src files to: {pyocct_src}")
 
     # For debugging and dev
-    main.bind_enums = True
-    main.bind_functions = True
-    main.bind_classes = True
-    main.bind_typedefs = True
-    main.bind_class_templates = True
+    gen.bind_enums = True
+    gen.bind_functions = True
+    gen.bind_classes = True
+    gen.bind_typedefs = True
+    gen.bind_class_templates = True
 
-    main.process_config(args.config_path)
+    gen.process_config(args.config_path)
 
     print('Generate common header file...')
-    main.generate_common_header(pyocct_inc)
+    gen.generate_common_header(pyocct_inc)
 
     print('Parsing headers...')
-    main.parse(join(gen_dir, 'all_includes.h'))
-    main.dump_diagnostics()
+    gen.parse(join(gen_dir, 'all_includes.h'))
+    gen.dump_diagnostics()
 
     print('Traversing headers...')
-    main.traverse()
+    gen.traverse()
 
     print('Sorting binders...')
-    main.sort_binders()
+    gen.sort_binders()
 
     print('Building includes...')
-    main.build_includes()
+    gen.build_includes()
 
     print('Building imports...')
-    main.build_imports()
+    gen.build_imports()
 
     print('Checking circular imports...')
-    main.check_circular()
+    gen.check_circular()
 
     print('Binding templates...')
-    main.bind_templates(pyocct_src)
+    gen.bind_templates(pyocct_src)
 
     print('Binding...')
-    main.bind(pyocct_src)
+    gen.bind(pyocct_src)
     print('Done!')
-    print('='*100)
+    print('=' * 100)
 
 
 if __name__ == '__main__':
