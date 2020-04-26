@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import traceback
 import sys
 from os.path import join, abspath, exists
 
@@ -194,35 +195,43 @@ def main():
 
     gen.process_config(args.config_path)
 
-    print('Generate common header file...')
-    gen.generate_common_header(pyocct_inc)
+    try:
+        print('Generate common header file...')
+        gen.generate_common_header(pyocct_inc)
 
-    print('Parsing headers...')
-    gen.parse(join(gen_dir, 'all_includes.h'))
-    gen.dump_diagnostics()
+        print('Parsing headers...')
+        gen.parse(join(gen_dir, 'all_includes.h'))
+        gen.dump_diagnostics()
 
-    print('Traversing headers...')
-    gen.traverse()
+        print('Traversing headers...')
+        gen.traverse()
 
-    print('Sorting binders...')
-    gen.sort_binders()
+        print('Sorting binders...')
+        gen.sort_binders()
 
-    print('Building includes...')
-    gen.build_includes()
+        print('Building includes...')
+        gen.build_includes()
 
-    print('Building imports...')
-    gen.build_imports()
+        print('Building imports...')
+        gen.build_imports()
 
-    print('Checking circular imports...')
-    gen.check_circular()
+        print('Checking circular imports...')
+        gen.check_circular()
 
-    print('Binding templates...')
-    gen.bind_templates(pyocct_src)
+        print('Binding templates...')
+        gen.bind_templates(pyocct_src)
 
-    print('Binding...')
-    gen.bind(pyocct_src)
-    print('Done!')
-    print('=' * 100)
+        print('Binding...')
+        gen.bind(pyocct_src)
+        print('Done!')
+        print('=' * 100)
+    except Exception as e:
+        print('=' * 100)
+        with open('log.txt') as f:
+            for line in f:
+                print(line.rstrip())
+        print('=' * 100)
+        raise
 
 
 if __name__ == '__main__':
