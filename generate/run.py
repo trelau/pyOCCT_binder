@@ -4,12 +4,12 @@ import os
 import sys
 from os.path import join, abspath, exists
 
-from binder.core import Generator
-
 # If running outside this folder we need to add this to the syspath
 BINDER_ROOT = os.path.dirname(os.path.dirname(__file__))
 if BINDER_ROOT not in sys.path:
     sys.path.append(BINDER_ROOT)
+
+from binder.core import Generator
 
 
 def get_search_paths():
