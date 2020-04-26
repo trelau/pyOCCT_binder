@@ -1630,7 +1630,7 @@ class CursorBinder(object):
                     continue
 
                 # Should never get here
-                assert False
+                raise RuntimeError('Failed to find a base for {}'.format(base.spelling))
 
         bases = []
         # If "self" is a template specialization, try and get it first before

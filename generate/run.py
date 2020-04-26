@@ -12,51 +12,18 @@ if BINDER_ROOT not in sys.path:
 from binder.core import Generator
 
 
-def get_search_paths():
-    """ Generate a list of paths to search for clang and opencascade
-
+def find_include_path(name, path):
     """
-    for env_var in ('PREFIX', 'CONDA_PREFIX', 'CONDA_ROOT', 'BUILD_PREFIX',
-                    'LIBRARY_PREFIX', 'LIBRARY_LIB', 'LIBRARY_INC'):
-        path = os.environ.get(env_var)
-        if path:
-            yield path
-            if sys.platform == 'win32':
-                yield join(path, 'Library')
-    return '.'
+    Attempt to find an include directory of a given header file.
 
+    :param name: The header file to search for.
+    :param path: The starting path.
 
-# Use conda instead of system lib/includes
-def find_occt_include_dir():
-    for path in get_search_paths():
-        occt_include_dir = abspath(join(path, 'include', 'opencascade'))
-        if exists(occt_include_dir):
-            print("Found {}".format(occt_include_dir))
-            return occt_include_dir
-
-
-def find_clang_include_dir():
-    for path in get_search_paths():
-        clang_include_path = join(path, 'lib', 'clang', '10.0.0', 'include')
-        if exists(clang_include_path):
-            print("Found {}".format(clang_include_path))
-            return clang_include_path
-
-
-def find_vtk_include_dir():
-    for path in get_search_paths():
-        vtk_include_path = join(path, 'include', 'vtk-8.2')
-        if exists(vtk_include_path):
-            print("Found {}".format(vtk_include_path))
-            return vtk_include_path
-
-
-def find_tbb_include_dir():
-    for path in get_search_paths():
-        tbb_include_path = join(path, 'Library', 'include')
-        if exists(tbb_include_path):
-            print("Found {}".format(tbb_include_path))
-            return tbb_include_path
+    :return: The full path to the directory of the given header file.
+    """
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return root
 
 
 def gen_includes(opencascade_include_path='../include/opencascade',
@@ -114,33 +81,38 @@ def main():
         default=join(BINDER_ROOT, 'generate', 'config.txt'))
 
     parser.add_argument(
-        '-i',
-        help='Path to opencascade includes',
-        dest='opencascade_include_path',
-        default='')
-
-    parser.add_argument(
         '-o',
         help='Path to pyOCCT',
         default='.',
         dest='pyocct_path')
 
-    parser.add_argument(
-        '--clang',
-        help='Path to clang includes',
-        dest='clang_include_path',
-        default='')
-
     args = parser.parse_args()
 
-    opencascade_include_path = args.opencascade_include_path or find_occt_include_dir()
-    clang_include_path = args.clang_include_path or find_clang_include_dir()
+    # Get the root directory of the conda environment
+    conda_prefix = os.environ.get('CONDA_PREFIX')
 
-    vtk_include_path = find_vtk_include_dir()
-    tbb_include_path = find_tbb_include_dir()
+    # Attempt to find include directories by searching for a known header file. Will likely
+    # need to make this more robust.
+    opencascade_include_path = find_include_path('Standard.hxx', conda_prefix)
+    vtk_include_path = find_include_path('vtk_doubleconversion.h', conda_prefix)
+    tbb_include_path = find_include_path('tbb.h', conda_prefix)
+    tbb_include_path = os.path.split(tbb_include_path)[0]
+
+    print('Include directories:')
+    print('\tOpenCASCADE: {}'.format(opencascade_include_path))
+    print('\tVTK: {}'.format(vtk_include_path))
+    print('\tTBB: {}'.format(tbb_include_path))
+
+    # TODO: Move this to pyOCCT. Add include directory for missing OCCT header files.
     missing_includes = abspath(join(BINDER_ROOT, 'generate', 'extra_includes'))
 
-    extra_includes = [i for i in [vtk_include_path, tbb_include_path, missing_includes] if i]
+    clang_include_path = ''
+    if sys.platform.startswith('linux'):
+        clang_include_path = find_include_path('__stddef_max_align_t.h', conda_prefix)
+        print('Found clangdev include directory: {}'.format(clang_include_path))
+
+    extra_includes = [i for i in [vtk_include_path, tbb_include_path,
+                                  clang_include_path, missing_includes] if i]
 
     if not opencascade_include_path or not exists(opencascade_include_path):
         print(f"ERROR: OpenCASCADE include path does not exist:"
@@ -157,21 +129,19 @@ def main():
               f"{args.config_path}")
         sys.exit(1)
 
-    # Force using conda's clangdev includes
-    # TODO: This may not be needed on other systems but was getting errors
-    # on linux.
-    if not exists(clang_include_path):
+    # TODO: Force using conda's clangdev includes. This may not be needed on other systems but was
+    #  getting errors on linux.
+    if sys.platform.startswith('linux') and not exists(clang_include_path):
         print(f"ERROR: libclang include path is does not exist:"
               f"{clang_include_path}")
         sys.exit(1)
 
-    # TODO: Move this to the binder?
+    # TODO: Move this to the binder
     print('Collecting OpenCASCADE headers...')
     gen_dir = abspath(join(BINDER_ROOT, 'generate'))
     occt_mods = gen_includes(opencascade_include_path, gen_dir)
 
-    gen = Generator(occt_mods, opencascade_include_path, clang_include_path,
-                    *extra_includes)
+    gen = Generator(occt_mods, opencascade_include_path, *extra_includes)
 
     pyocct_inc = abspath(join(args.pyocct_path, 'inc'))
     pyocct_src = abspath(join(args.pyocct_path, 'src', 'occt'))
