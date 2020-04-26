@@ -16,13 +16,13 @@ def get_search_paths():
     """ Generate a list of paths to search for clang and opencascade
 
     """
-    for env_var in ('PREFIX', 'CONDA_PREFIX', 'BUILD_PREFIX',
+    for env_var in ('PREFIX', 'CONDA_PREFIX', 'CONDA_ROOT', 'BUILD_PREFIX',
                     'LIBRARY_PREFIX', 'LIBRARY_LIB', 'LIBRARY_INC'):
         path = os.environ.get(env_var)
         if path:
             yield path
     if sys.platform == 'win32':
-        yield join(os.environ.get('BUILD_PREFIX'), 'Library')
+        yield join(os.environ.get('BUILD_PREFIX', '.'), 'Library')
     return '.'
 
 # Use conda instead of system lib/includes
@@ -32,7 +32,6 @@ def find_occt_include_dir():
         if exists(occt_include_dir):
             print("Found {}".format(occt_include_dir))
             return occt_include_dir
-
 
 def find_clang_include_dir():
     for path in get_search_paths():
@@ -91,6 +90,12 @@ def main():
     print('='*100)
 
     parser.add_argument(
+        '-c',
+        help='Path to config.txt',
+        dest='config_path',
+        default=join(BINDER_ROOT, 'generate', 'config.txt'))
+
+    parser.add_argument(
         '-i',
         help='Path to opencascade includes',
         dest='opencascade_include_path',
@@ -113,7 +118,7 @@ def main():
     opencascade_include_path = args.opencascade_include_path or find_occt_include_dir()
     clang_include_path = args.clang_include_path or find_clang_include_dir()
 
-    if not exists(opencascade_include_path):
+    if not opencascade_include_path or not exists(opencascade_include_path):
         print(f"ERROR: OpenCASCADE include path does not exist:"
               f"{opencascade_include_path}")
         sys.exit(1)
@@ -121,6 +126,11 @@ def main():
     if not exists(args.pyocct_path):
         print(f"ERROR: pyOCCT path is does not exist: "
               f"{args.pyocct_path}")
+        sys.exit(1)
+
+    if not exists(args.config_path):
+        print(f"ERROR: binder config path is does not exist: "
+              f"{args.config_path}")
         sys.exit(1)
 
     # Force using conda's clangdev includes
@@ -157,7 +167,7 @@ def main():
     main.bind_typedefs = True
     main.bind_class_templates = True
 
-    main.process_config(join(BINDER_ROOT, 'generate', 'config.txt'))
+    main.process_config(args.config_path)
 
     print('Generate common header file...')
     main.generate_common_header(pyocct_inc)
