@@ -164,9 +164,6 @@ def main():
 
     gen.process_config(args.config_path)
 
-    print('Generate common header file...')
-    gen.generate_common_header(pyocct_inc)
-
     print('Parsing headers...')
     gen.parse(join(gen_dir, 'all_includes.h'))
     gen.dump_diagnostics()

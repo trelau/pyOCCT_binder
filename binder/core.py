@@ -21,6 +21,7 @@ import os
 from collections import OrderedDict
 from ctypes import c_uint
 import re
+import warnings
 
 from binder import cymbal
 from clang.cindex import (AccessSpecifier, Index, TranslationUnit,
@@ -431,43 +432,6 @@ class Generator(object):
                     else:
                         self.patches[qname] = [pair]
                     continue
-
-    def generate_common_header(self, path):
-        """
-        Generate common header file for the pyOCCT project.
-        :param str path: Path to write header file.
-        :return:
-        """
-        return # Disabled
-        logger.write('Generating common header...\n')
-
-        # Create module folder
-        folder = '/'.join([path])
-        if not os.path.isdir(folder):
-            os.makedirs(folder)
-
-        fname = ''.join([path, '/', 'pyOCCT_Common.hxx'])
-        fout = open(fname, 'w')
-
-        fout.write(SRC_PREFIX)
-
-        txt = """
-#ifndef __pyOCCT_Common_Header__
-#define __pyOCCT_Common_Header__
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/stl_bind.h>
-#include <Standard_Handle.hxx>
-namespace py = pybind11;
-// Use opencascade::handle as holder type for Standard_Transient types
-PYBIND11_DECLARE_HOLDER_TYPE(T, opencascade::handle<T>, true);
-"""
-
-        fout.write(txt)
-        fout.write('#endif\n')
-        fout.close()
-
-        logger.write('done.\n\n')
 
     def parse(self, file_, *args):
         """
@@ -1630,7 +1594,7 @@ class CursorBinder(object):
                     continue
 
                 # Should never get here
-                raise RuntimeError('Failed to find a base for {}'.format(base.spelling))
+                warnings.warn('Failed to find a base for {}'.format(base.spelling), RuntimeWarning)
 
         bases = []
         # If "self" is a template specialization, try and get it first before
