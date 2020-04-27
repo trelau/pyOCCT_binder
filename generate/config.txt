@@ -12,6 +12,7 @@
 +arg win32: -fms-compatibility-version=19
 +arg win32: -fdelayed-template-parsing
 +arg linux: -D_INC_WINDOWS
++arg linux: -D__WINDOWS_H_INCLUDED
 
 # Immutable types -------------------------------------------------------------
 +immutable Standard_Boolean
