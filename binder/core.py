@@ -21,6 +21,7 @@ import os
 from collections import OrderedDict
 from ctypes import c_uint
 import re
+import sys
 import warnings
 
 from binder import cymbal
@@ -132,7 +133,7 @@ class Generator(object):
         self.include_dirs = []
 
         # Compiler arguments
-        self.compiler_args = []
+        self.compiler_args = {}
 
         # Sort priority
         self._sort = {}
@@ -203,7 +204,13 @@ class Generator(object):
                 if line.startswith('+arg'):
                     line = line.replace('+arg', '')
                     line = line.strip()
-                    self.compiler_args.append(line)
+                    platform, arg = line.split(':')
+                    platform = platform.strip()
+                    arg = arg.strip()
+                    if platform in self.compiler_args:
+                        self.compiler_args[platform].append(arg)
+                    else:
+                        self.compiler_args[platform] = [arg]
                     continue
 
                 # Sort order
@@ -433,19 +440,38 @@ class Generator(object):
                         self.patches[qname] = [pair]
                     continue
 
-    def parse(self, file_, *args):
+    def parse(self, file_):
         """
         Parse the main include file.
         :param str file_: The main include file to parse.
-        :param str args: Extra arguments to pass to the compiler.
         :return: None
         """
         logger.write('Parsing headers...\n')
 
-        args = list(args)
-        for arg in self.compiler_args:
-            args.append(arg)
-            logger.write('\tCompiler argument: {}\n'.format(arg))
+        args = []
+        # Any
+        if 'any' in self.compiler_args:
+            for arg in self.compiler_args['any']:
+                args.append(arg)
+                logger.write('\tCompiler argument: {}\n'.format(arg))
+
+        # win32
+        if sys.platform == 'win32' and 'win32' in self.compiler_args:
+            for arg in self.compiler_args['win32']:
+                args.append(arg)
+                logger.write('\tCompiler argument: {}\n'.format(arg))
+
+        # linux
+        if sys.platform == 'linux' and 'linux' in self.compiler_args:
+            for arg in self.compiler_args['linux']:
+                args.append(arg)
+                logger.write('\tCompiler argument: {}\n'.format(arg))
+
+        # osx
+        if sys.platform == 'darwin' and 'osx' in self.compiler_args:
+            for arg in self.compiler_args['osx']:
+                args.append(arg)
+                logger.write('\tCompiler argument: {}\n'.format(arg))
 
         for path in self.include_dirs + self._main_includes:
             args += [''.join(['-I', path])]

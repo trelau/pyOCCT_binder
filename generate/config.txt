@@ -1,16 +1,17 @@
 # Include directories ---------------------------------------------------------
 
 # Clang compiler arguments ----------------------------------------------------
-+arg -x
-+arg c++
-+arg -std=c++17
-+arg -fms-compatibility
-+arg -fms-extensions
-+arg -fms-compatibility-version=19
-+arg -D__CODE_GENERATOR__
-+arg -Wno-deprecated-declarations
-+arg -fdelayed-template-parsing
-+arg -ferror-limit=0
++arg any: -x
++arg any: c++
++arg any: -std=c++17
++arg any: -D__CODE_GENERATOR__
++arg any: -Wno-deprecated-declarations
++arg any: -ferror-limit=0
++arg win32: -fms-compatibility
++arg win32: -fms-extensions
++arg win32: -fms-compatibility-version=19
++arg win32: -fdelayed-template-parsing
++arg linux: -D_INC_WINDOWS
 
 # Immutable types -------------------------------------------------------------
 +immutable Standard_Boolean
