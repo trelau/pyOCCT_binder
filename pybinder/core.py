@@ -484,15 +484,21 @@ class Generator(object):
 
         self._tu_binder = CursorBinder(self.tu.cursor)
 
-    def dump_diagnostics(self):
+    def dump_diagnostics(self, severity=4):
         """
         Dump diagnostic information.
+
+        :param int severity: The level at or above to dump diagnostics. Anything lower than this
+            will be not be printed.
+
         :return: None.
         """
         print('----------------------')
         print('DIAGNOSTIC INFORMATION')
         print('----------------------')
         for diag in self.tu.diagnostics:
+            if diag.serverity < severity:
+                continue
             print('---')
             print('SEVERITY: {}'.format(diag.severity))
             print('LOCATION: {}'.format(diag.location))
@@ -2922,8 +2928,7 @@ def patch_src(filename, src):
         for i, line in enumerate(src[:]):
             if find in line:
                 new_line = line.replace(find, replace)
-                msg = "Patched {} line {}:\n{}\n{}".format(
-                    filename, i + line_start, line, new_line)
+                msg = "Patched file: {}".format(filename)
                 logger.write(msg)
                 print(msg)
 
