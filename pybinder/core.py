@@ -497,7 +497,7 @@ class Generator(object):
         print('DIAGNOSTIC INFORMATION')
         print('----------------------')
         for diag in self.tu.diagnostics:
-            if diag.serverity < severity:
+            if diag.severity < severity:
                 continue
             print('---')
             print('SEVERITY: {}'.format(diag.severity))
