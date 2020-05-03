@@ -18,33 +18,34 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 import os
-from collections import OrderedDict
-from ctypes import c_uint
 import re
 import sys
 import warnings
+from collections import OrderedDict
+from ctypes import c_uint
 
-from binder import cymbal
 from clang.cindex import (AccessSpecifier, Index, TranslationUnit,
-                                 CursorKind, TypeKind, Cursor)
-from binder.common import SRC_PREFIX, PY_OPERATORS
+                          CursorKind, TypeKind, Cursor)
+
+from pybinder import clangext
+from pybinder.common import SRC_PREFIX, PY_OPERATORS
 
 # Patches for libclang
-cymbal.monkeypatch_cursor('get_specialization',
-                          'clang_getSpecializedCursorTemplate',
-                          [Cursor], Cursor)
+clangext.monkeypatch_cursor('get_specialization',
+                            'clang_getSpecializedCursorTemplate',
+                            [Cursor], Cursor)
 
-cymbal.monkeypatch_cursor('get_template_kind',
-                          'clang_getTemplateCursorKind',
-                          [Cursor], c_uint)
+clangext.monkeypatch_cursor('get_template_kind',
+                            'clang_getTemplateCursorKind',
+                            [Cursor], c_uint)
 
-cymbal.monkeypatch_cursor('get_num_overloaded_decl',
-                          'clang_getNumOverloadedDecls',
-                          [Cursor], c_uint)
+clangext.monkeypatch_cursor('get_num_overloaded_decl',
+                            'clang_getNumOverloadedDecls',
+                            [Cursor], c_uint)
 
-cymbal.monkeypatch_cursor('get_overloaded_decl',
-                          'clang_getOverloadedDecl',
-                          [Cursor, c_uint], Cursor)
+clangext.monkeypatch_cursor('get_overloaded_decl',
+                            'clang_getOverloadedDecl',
+                            [Cursor, c_uint], Cursor)
 
 logger = open('log.txt', 'w')
 
@@ -427,7 +428,7 @@ class Generator(object):
                     self.immutable.add(line)
                     continue
 
-                 # Replace text in file
+                # Replace text in file
                 if line.startswith('+patch'):
                     line = line.replace('+patch', '')
                     line = line.strip()
@@ -1011,7 +1012,6 @@ class Module(object):
             os.makedirs(path)
         fname = '/'.join([path, self.name + '.cxx'])
 
-
         fout = open(fname, 'w')
 
         # File header
@@ -1074,7 +1074,7 @@ class Module(object):
 
         # Patch the file
         # TODO: Line Number is off
-        patch_src(self.name , src)
+        patch_src(self.name, src)
 
         # Write it out
         for line in src:
@@ -2429,8 +2429,8 @@ def generate_class(binder):
     # Source
     tname = 'typename ' + qname if '::' in qname else qname
     src = ['py::class_<{}{}{}> {}({}, {}, \"{}\"{}{});\n'.format(
-            tname, holder, bases, cls, parent, name_, docs, multi_base,
-            local)]
+        tname, holder, bases, cls, parent, name_, docs, multi_base,
+        local)]
 
     # Constructors
     src_ctor = []
@@ -2448,7 +2448,6 @@ def generate_class(binder):
             # If it has virtual methods tag it as abstract
             if binder.has_unimplemented_methods:
                 src_ctor[0] = '// abstract virtual methods // ' + src_ctor[0]
-
 
     if src_ctor:
         src_ctor.insert(0, '\n// Constructors\n')
@@ -2930,4 +2929,3 @@ def patch_src(filename, src):
 
                 # Update the src line
                 src[i] = new_line
-
