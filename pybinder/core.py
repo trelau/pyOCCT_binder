@@ -496,14 +496,20 @@ class Generator(object):
         print('----------------------')
         print('DIAGNOSTIC INFORMATION')
         print('----------------------')
+        other_issues = 0
         for diag in self.tu.diagnostics:
             if diag.severity < severity:
+                other_issues += 1
                 continue
             print('---')
             print('SEVERITY: {}'.format(diag.severity))
             print('LOCATION: {}'.format(diag.location))
             print('MESSAGE: {}'.format(diag.spelling))
             print('---')
+
+        msg = 'Complete with {} issues with lower than {} severity not shown.'.format(other_issues,
+                                                                                      severity)
+        print(msg)
         print('----------------------')
 
     def save(self, fname):
