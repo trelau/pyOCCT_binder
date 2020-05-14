@@ -121,6 +121,7 @@ class Generator(object):
     manual = dict()
     extra = dict()
     patches = dict()
+    return_policies = dict()
 
     _mods = OrderedDict()
 
@@ -360,6 +361,14 @@ class Generator(object):
                     else:
                         self.excluded_imports[mod1] = [mod2]
                     continue
+
+                # Return policies
+                if line.startswith('+return_policy'):
+                    line = line.replace('+return_policy', '').strip()
+                    # Member of py::return_value_policy
+                    # auto, reference, copy, etc..
+                    qname, policy = map(str.strip, line.split('-->', 1))
+                    self.return_policies[qname] = policy
 
                 # Call guards
                 if line.startswith('+cguard'):
@@ -2649,6 +2658,17 @@ def generate_method(binder):
     sig = function_signature(binder)
     nargs, ndefaults, args_name, args_type, defaults, is_array_like = sig
 
+    # Pybind return policy
+    if qname in Generator.return_policies:
+        policy = Generator.return_policies[qname]
+        rv_policy = f', py::return_value_policy::{policy}'
+    elif (rtype.rstrip().endswith("&") and
+             not is_const and
+             not rtype.lstrip().startswith('const ')):
+        rv_policy = ', py::return_value_policy::reference'
+    else:
+        rv_policy = ''
+
     # Call guards
     cguards = ''
     if qname in Generator.call_guards:
@@ -2680,12 +2700,13 @@ def generate_method(binder):
                 py_args.append(', py::arg(\"{}\")'.format(name))
             py_args = ''.join(py_args)
 
-            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{});\n'.format(
+            tmpl = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{}{});\n'
+            src = tmpl.format(
                 prefix, is_static,
                 fname, rtype, ptr,
                 signature, is_const,
                 qname, is_operator,
-                docs, py_args, cguards)
+                docs, py_args, rv_policy, cguards)
         else:
             arg_list = []
             args_spelling = []
