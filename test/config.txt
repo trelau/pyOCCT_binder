@@ -1,0 +1,11 @@
+# Clang compiler arguments
++arg any: -x
++arg any: c++
++arg any: -std=c++14
++arg any: -D__CODE_GENERATOR__
++arg any: -Wno-deprecated-declarations
++arg any: -ferror-limit=0
++arg win32: -fms-compatibility
++arg win32: -fms-extensions
++arg win32: -fms-compatibility-version=19
++arg win32: -fdelayed-template-parsing

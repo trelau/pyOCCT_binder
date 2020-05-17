@@ -121,6 +121,7 @@ class Generator(object):
     manual = dict()
     extra = dict()
     patches = dict()
+    return_policies = dict()
 
     _mods = OrderedDict()
 
@@ -360,6 +361,12 @@ class Generator(object):
                     else:
                         self.excluded_imports[mod1] = [mod2]
                     continue
+
+                # Return policies
+                if line.startswith('+return_policy'):
+                    line = line.replace('+return_policy', '').strip()
+                    qname, policy = map(str.strip, line.split('-->', 1))
+                    self.return_policies[qname] = policy
 
                 # Call guards
                 if line.startswith('+cguard'):
@@ -2649,6 +2656,13 @@ def generate_method(binder):
     sig = function_signature(binder)
     nargs, ndefaults, args_name, args_type, defaults, is_array_like = sig
 
+    # Return policy
+    return_policy = ''
+    if qname in Generator.return_policies:
+        return_policy = ', py::return_value_policy::{}'.format(Generator.return_policies[qname])
+    if binder.rtype.is_lvalue and not binder.rtype.is_const_qualified:
+        return_policy = ', py::return_value_policy::reference'
+
     # Call guards
     cguards = ''
     if qname in Generator.call_guards:
@@ -2680,12 +2694,12 @@ def generate_method(binder):
                 py_args.append(', py::arg(\"{}\")'.format(name))
             py_args = ''.join(py_args)
 
-            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{});\n'.format(
+            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{}{});\n'.format(
                 prefix, is_static,
                 fname, rtype, ptr,
                 signature, is_const,
                 qname, is_operator,
-                docs, py_args, cguards)
+                docs, py_args, return_policy, cguards)
         else:
             arg_list = []
             args_spelling = []
