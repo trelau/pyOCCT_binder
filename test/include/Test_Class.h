@@ -5,6 +5,10 @@ public:
 
     Test_SimpleClass();
 
-    int& TestReturnPolicy();
+    int TestReturnPolicy1();
+
+    const int& TestReturnPolicy2();
+
+    int& TestReturnPolicy3();
 
 };
