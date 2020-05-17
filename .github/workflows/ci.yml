@@ -32,11 +32,16 @@ jobs:
           conda info -a
           conda list
 
-      - name: "Test binder"
+      - name: "Install binder"
         shell: pwsh
         run: |
           conda activate binder
           python setup.py install
+
+      - name: "Test binder"
+        shell: pwsh
+        run: |
+          conda activate binder
           cd test
           python -m unittest discover
 
@@ -69,11 +74,16 @@ jobs:
           conda info -a
           conda list
 
-      - name: "Test binder"
+      - name: "Install binder"
         shell: bash -l {0}
         run: |
           conda activate binder
           python setup.py install
+
+      - name: "Test binder"
+        shell: bash -l {0}
+        run: |
+          conda activate binder
           cd test
           python -m unittest discover
 
@@ -108,10 +118,15 @@ jobs:
           conda info -a
           conda list
 
-      - name: "Test binder"
+      - name: "Install binder"
         shell: pwsh
         run: |
           conda activate binder
           python setup.py install
+
+      - name: "Test binder"
+        shell: pwsh
+        run: |
+          conda activate binder
           cd test
           python -m unittest discover
