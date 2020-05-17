@@ -35,8 +35,9 @@ jobs:
       - name: "Test binder"
         shell: pwsh
         run: |
-          cd test
           conda activate binder
+          python setup.py install
+          cd test
           python -m unittest discover
 
   test_win:
@@ -71,8 +72,9 @@ jobs:
       - name: "Test binder"
         shell: bash -l {0}
         run: |
-          cd test
           conda activate binder
+          python setup.py install
+          cd test
           python -m unittest discover
 
   test_macos:
@@ -109,6 +111,7 @@ jobs:
       - name: "Test binder"
         shell: pwsh
         run: |
-          cd test
           conda activate binder
+          python setup.py install
+          cd test
           python -m unittest discover
