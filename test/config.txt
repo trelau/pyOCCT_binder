@@ -9,3 +9,6 @@
 +arg win32: -fms-extensions
 +arg win32: -fms-compatibility-version=19
 +arg win32: -fdelayed-template-parsing
+
+# Return value policies
++return_policy Test_SimpleClass::TestReturnPolicy3-->reference_internal

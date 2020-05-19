@@ -2660,11 +2660,6 @@ def generate_method(binder):
     return_policy = ''
     if qname in Generator.return_policies:
         return_policy = ', py::return_value_policy::{}'.format(Generator.return_policies[qname])
-    elif rtype.rstrip().endswith('&') and not rtype.lstrip().startswith('const'):
-        return_policy = ', py::return_value_policy::reference_internal'
-    if return_policy:
-        msg = '\tSet return value policy: {}-->{}\n'.format(qname, return_policy)
-        logger.write(msg)
 
     # Call guards
     cguards = ''
