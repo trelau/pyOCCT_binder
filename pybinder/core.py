@@ -118,8 +118,8 @@ class Generator(object):
     python_names = dict()
     excluded_imports = dict()
     call_guards = dict()
-    manual = dict()
-    extra = dict()
+    before_type = dict()
+    after_type = dict()
     patches = dict()
     return_policies = dict()
 
@@ -403,29 +403,29 @@ class Generator(object):
                     continue
 
                 # Manual text
-                if line.startswith('+manual'):
-                    line = line.replace('+manual', '')
+                if line.startswith('+before_type'):
+                    line = line.replace('+before_type', '', 1)
                     line = line.strip()
                     qname, txt = line.split('-->', 1)
                     qname = qname.strip()
                     txt = txt.strip()
-                    if qname in self.manual:
-                        self.manual[qname].append(txt)
+                    if qname in self.before_type:
+                        self.before_type[qname].append(txt)
                     else:
-                        self.manual[qname] = [txt]
+                        self.before_type[qname] = [txt]
                     continue
 
                 # Extra text
-                if line.startswith('+extra'):
-                    line = line.replace('+extra', '')
+                if line.startswith('+after_type'):
+                    line = line.replace('+after_type', '', 1)
                     line = line.strip()
                     qname, txt = line.split('-->', 1)
                     qname = qname.strip()
                     txt = txt.strip()
-                    if qname in self.extra:
-                        self.extra[qname].append(txt)
+                    if qname in self.after_type:
+                        self.after_type[qname].append(txt)
                     else:
-                        self.extra[qname] = [txt]
+                        self.after_type[qname] = [txt]
                     continue
 
                 # Immutable types
@@ -2362,6 +2362,16 @@ def generate_class(binder):
     qname = binder.qualified_name
     docs = binder.docs
 
+    src = []
+
+    # Text before type
+    if qname in Generator.before_type:
+        src.append('// Before type\n')
+        for txt in Generator.before_type[qname]:
+            txt = ''.join([txt, '\n'])
+            src.append(txt)
+        src.append('\n')
+
     # Source variable
     if binder.is_nested:
         cls = '_'.join(['cls', binder.parent.python_name, name])
@@ -2447,9 +2457,9 @@ def generate_class(binder):
 
     # Source
     tname = 'typename ' + qname if '::' in qname else qname
-    src = ['py::class_<{}{}{}> {}({}, {}, \"{}\"{}{});\n'.format(
+    src.append('py::class_<{}{}{}> {}({}, {}, \"{}\"{}{});\n'.format(
         tname, holder, bases, cls, parent, name_, docs, multi_base,
-        local)]
+        local))
 
     # Constructors
     src_ctor = []
@@ -2523,18 +2533,10 @@ def generate_class(binder):
             has_nested = True
         src += generate_class(nested)
 
-    # Manual text before class_
-    if qname in Generator.manual:
-        i = 0
-        for txt in Generator.manual[qname]:
-            src.insert(i, txt)
-            i += 1
-        src.insert(i, '\n\n')
-
     # Extra text for the class
-    if qname in Generator.extra:
-        src.append('\n' + '// Extra' + '\n')
-        for txt in Generator.extra[qname]:
+    if qname in Generator.after_type:
+        src.append('\n' + '// After type' + '\n')
+        for txt in Generator.after_type[qname]:
             src.append(txt)
             src.append('\n')
 

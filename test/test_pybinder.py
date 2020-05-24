@@ -50,7 +50,8 @@ class TestBinder(unittest.TestCase):
     def test_compare_output(self):
         with open('output/Test.cxx') as f1:
             with open('expected/Test.cxx') as f2:
-                self.assertEqual(len(set(f1).difference(f2)), 0)
+                for l1, l2 in zip(f1, f2):
+                    self.assertEqual(l1, l2)
 
 
 if __name__ == '__main__':

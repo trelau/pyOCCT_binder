@@ -12,3 +12,11 @@
 
 # Return value policies
 +return_policy Test_SimpleClass::TestReturnPolicy3-->reference_internal
+
+# Before type
++before_type Test_SimpleClass-->// Testing +before_type line 1
++before_type Test_SimpleClass-->// Testing +before_type line 2
+
+# After type
++after_type Test_SimpleClass-->// Testing +after_type line 1
++after_type Test_SimpleClass-->// Testing +after_type line 2

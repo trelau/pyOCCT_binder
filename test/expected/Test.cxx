@@ -26,6 +26,10 @@ PYBIND11_MODULE(Test, mod) {
 
 
 // CLASS: TEST_SIMPLECLASS
+// Before type
+// Testing +before_type line 1
+// Testing +before_type line 2
+
 py::class_<Test_SimpleClass> cls_Test_SimpleClass(mod, "Test_SimpleClass", "Test class");
 
 // Constructors
@@ -35,6 +39,10 @@ cls_Test_SimpleClass.def(py::init<>());
 cls_Test_SimpleClass.def("TestReturnPolicy1", (int (Test_SimpleClass::*)()) &Test_SimpleClass::TestReturnPolicy1, "None");
 cls_Test_SimpleClass.def("TestReturnPolicy2", (const int & (Test_SimpleClass::*)()) &Test_SimpleClass::TestReturnPolicy2, "None");
 cls_Test_SimpleClass.def("TestReturnPolicy3", (int & (Test_SimpleClass::*)()) &Test_SimpleClass::TestReturnPolicy3, "None", py::return_value_policy::reference_internal);
+
+// After type
+// Testing +after_type line 1
+// Testing +after_type line 2
 
 
 }
