@@ -1,7 +1,7 @@
 # This file is part of pyOCCT_binder which automatically generates Python
 # bindings to the OpenCASCADE geometry kernel using pybind11.
 #
-# Copyright (C) 2016-2018  Laughlin Research, LLC (info@laughlinresearch.com)
+# Copyright (C) 2016-2018  Laughlin Research, LLC
 # Copyright (C) 2019 Trevor Laughlin
 #
 # This library is free software; you can redistribute it and/or
