@@ -8,3 +8,7 @@ docs/build/
 # Byte-compiled
 __pycache__/
 *.py[co]
+
+generate/
+test/output/
+log.txt
