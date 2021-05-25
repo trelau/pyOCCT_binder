@@ -48,10 +48,11 @@ class TestBinder(unittest.TestCase):
         gen.bind(output_path)
 
     def test_compare_output(self):
-        with open('output/Test.cxx') as f1:
-            with open('expected/Test.cxx') as f2:
-                for l1, l2 in zip(f1, f2):
-                    self.assertEqual(l1, l2)
+        for filename in ('Test.cxx', 'bind_Test_Template.hxx'):
+            with open(f'output/{filename}') as f1:
+                with open(f'expected/{filename}') as f2:
+                    for l1, l2 in zip(f1, f2):
+                        self.assertEqual(l1, l2)
 
 
 if __name__ == '__main__':
