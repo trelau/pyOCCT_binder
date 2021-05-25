@@ -1725,7 +1725,7 @@ class CursorBinder(object):
             (e.g., "=0"). If not available returns an empty string.
         :rtype: str
         """
-        if not self.is_param:
+        if not (self.is_param or self.is_template_type_param):
             return ''
         txt = ''
         for t in self.cursor.get_tokens():
@@ -2198,10 +2198,12 @@ def bind_class_template(binder, path):
     template_params = []
     for t in binder.template_parameters:
         if t.is_template_type_param:
-            template_params.append('typename {}'.format(t.display_name))
+            template_param = 'typename {}'.format(t.display_name)
         else:
-            template_params.append('{} {}'.format(t.type.spelling,
-                                                  t.display_name))
+            template_param = '{} {}'.format(t.type.spelling, t.display_name)
+        if t.default_value:
+            template_param += '={}'.format(t.default_value)
+        template_params.append(template_param)
     src.append('template <{}>\n'.format(', '.join(template_params)))
 
     # Bind function
