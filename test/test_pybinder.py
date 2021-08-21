@@ -35,7 +35,7 @@ class TestBinder(unittest.TestCase):
         """
         available_mods = {'Test'}
         all_includes = os.listdir('./include/')
-        main_includes = set()
+        main_includes = ['./include/']
         output_path = './output'
         gen = Generator('Test', {'Test': available_mods}, all_includes, main_includes)
         gen.process_config('config.txt')
