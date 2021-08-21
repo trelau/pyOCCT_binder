@@ -129,6 +129,7 @@ class Generator(object):
     _mods = OrderedDict()
 
     def __init__(self, package_name, namespace, all_includes, main_includes):
+        self.package_name = package_name
         self._indx = Index.create()
 
         # Primary include directories

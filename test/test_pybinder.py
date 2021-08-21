@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+import os
 import unittest
 
 from pybinder.core import Generator
@@ -33,9 +34,10 @@ class TestBinder(unittest.TestCase):
         Set up the tests by parsing the header.
         """
         available_mods = {'Test'}
-        inc = './include/'
+        all_includes = os.listdir('./include/')
+        main_includes = set()
         output_path = './output'
-        gen = Generator(available_mods, inc)
+        gen = Generator('Test', {'Test': available_mods}, all_includes, main_includes)
         gen.process_config('config.txt')
         gen.parse('all_includes.h')
         gen.dump_diagnostics(1)
