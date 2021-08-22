@@ -1747,7 +1747,7 @@ class CursorBinder(object):
     @property
     def parameter_signature(self):
         """
-        Return the text of the paramter excluding the name
+        Return the text of the parameter excluding the name
         :return: The parameter spelling
         :rtype: str
 
