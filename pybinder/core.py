@@ -587,7 +587,6 @@ class Generator(object):
         logger.write('Traversing...\n')
         # Traverse the translation unit and group the binders into modules
         binders = self.tu_binder.get_children()
-        ignored = set()
         for binder in binders:
             # Only bind definitions
             # TODO Why is IGESFile and StepFile not considered definitions?
@@ -611,17 +610,11 @@ class Generator(object):
             # Add binder only if it's in an OCCT header file.
             inc = binder.filename
             if inc not in available_incs:
-                if inc not in ignored:
-                    ignored.add(inc)
-                    msg = '\tSkipping include {}.\n'.format(inc)
-                    logger.write(msg)
                 continue
 
             # Add binder if it's in an available module
             mod_name = binder.module_name
             if mod_name not in Generator.available_mods:
-                msg = '\tIgnoring mod {}.\n'.format(mod_name)
-                logger.write(msg)
                 continue
 
             # Add to module
@@ -1755,8 +1748,8 @@ class CursorBinder(object):
     @property
     def parameter_signature(self):
         """
-        Return the text of the paramter exluding the name
-        :return: parameter spelling
+        Return the text of the paramter excluding the name
+        :return: The parameter spelling
         :rtype: str
 
         """
