@@ -94,11 +94,10 @@ class Generator(object):
 
     package_name = 'OCCT'
 
-    common_includes = set(['pyOCCT_Common.hxx'])
-
     available_mods = set()
     namespace = dict()
     available_incs = set()
+    common_includes = set()
     available_templates = set()
     excluded_classes = set()
     excluded_functions = set()
