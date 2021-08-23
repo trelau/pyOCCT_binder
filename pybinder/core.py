@@ -120,6 +120,7 @@ class Generator(object):
     python_names = dict()
     excluded_imports = dict()
     call_guards = dict()
+    keep_alive = dict()
     before_type = dict()
     after_type = dict()
     patches = dict()
@@ -384,6 +385,14 @@ class Generator(object):
                         self.call_guards[qname].append(txt)
                     else:
                         self.call_guards[qname] = [txt]
+                    continue
+
+                # Keep alive
+                if line.startswith('+keep_alive'):
+                    line = line.replace('+keep_alive', '')
+                    line = line.strip()
+                    qname, params = line.split('-->', 1)
+                    self.keep_alive[qname.strip()] = params.strip()
                     continue
 
                 # Nested classes
@@ -2722,6 +2731,10 @@ def generate_method(binder):
     if qname in Generator.return_policies:
         return_policy = ', py::return_value_policy::{}'.format(Generator.return_policies[qname])
 
+    keep_alive = ''
+    if qname in Generator.keep_alive:
+        keep_alive = ', py::keep_alive<{}>()'.format(Generator.keep_alive[qname])
+
     # Call guards
     cguards = ''
     if qname in Generator.call_guards:
@@ -2759,12 +2772,12 @@ def generate_method(binder):
                 py_args.append(', py::arg(\"{}\")'.format(name))
             py_args = ''.join(py_args)
 
-            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{}{});\n'.format(
+            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{}{}{});\n'.format(
                 prefix, is_static,
                 fname, rtype, ptr,
                 signature, is_const,
                 qname, is_operator,
-                docs, py_args, return_policy, cguards)
+                docs, py_args, return_policy, keep_alive, cguards)
         else:
             arg_list = []
             args_spelling = []
