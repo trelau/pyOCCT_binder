@@ -18,9 +18,22 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 import os
+import sys
+import shutil
 import unittest
+import subprocess
 
 from pybinder.core import Generator
+
+
+def run(*args, **kwargs):
+    """
+    Run a command and print the output
+    """
+    output = subprocess.check_output(*args, **kwargs).decode()
+    for line in output.split('\n'):
+        print(line)
+    return output
 
 
 class TestBinder(unittest.TestCase):
@@ -55,6 +68,15 @@ class TestBinder(unittest.TestCase):
                 with open(f'expected/{filename}') as f2:
                     for l1, l2 in zip(f1, f2):
                         self.assertEqual(l1, l2)
+
+    def test_compile(self):
+        shutil.rmtree('build', ignore_errors=True)
+        os.makedirs('build')
+        output = run('cmake ../'.split(), cwd='build')
+        self.assertIn('Configuring done', output)
+        self.assertIn('Generating done', output)
+        output = run('make', cwd='build')
+        self.assertIn('Built target pyBinderTest', output)
 
 
 if __name__ == '__main__':

@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <pyTest_Common.hxx>
 #include <Test_Class.h>
+#include <Test_Params.h>
 
 PYBIND11_MODULE(Test, mod) {
 
@@ -43,6 +44,22 @@ cls_Test_SimpleClass.def("TestReturnPolicy3", (int & (Test_SimpleClass::*)()) &T
 // After type
 // Testing +after_type line 1
 // Testing +after_type line 2
+
+// CLASS: TEST_ITEM
+py::class_<Test_Item> cls_Test_Item(mod, "Test_Item", "None");
+
+// Constructors
+cls_Test_Item.def(py::init<>());
+
+// CLASS: TEST_PARAMS
+py::class_<Test_Params> cls_Test_Params(mod, "Test_Params", "None");
+
+// Constructors
+cls_Test_Params.def(py::init<>());
+
+// Methods
+cls_Test_Params.def("AddItems", (void (Test_Params::*)(const std::vector<const Test_Item *> &) const) &Test_Params::AddItems, "None", py::arg("items"));
+cls_Test_Params.def("AddItems", (void (Test_Params::*)(const std::vector<const Test_Item *> &, const std::vector<int> &) const) &Test_Params::AddItems, "None", py::arg("items"), py::arg("indices"));
 
 
 }

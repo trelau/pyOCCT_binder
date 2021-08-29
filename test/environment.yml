@@ -5,3 +5,5 @@ dependencies:
   - python=3.7
   - clangdev
   - python-clang
+  - pybind11
+  - cmake
