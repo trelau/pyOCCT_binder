@@ -76,6 +76,7 @@ class TestBinder(unittest.TestCase):
         if sys.platform == 'win32':
             prefix = os.environ.get("LIBRARY_PREFIX", '')
             args.append('-DCMAKE_SYSTEM_PREFIX_PATH=%s' % prefix)
+            print(args)
         output = run('cmake ../ -G Ninja'.split() + args, cwd='build')
         self.assertIn('Configuring done', output)
         self.assertIn('Generating done', output)
