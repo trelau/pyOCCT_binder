@@ -72,10 +72,14 @@ class TestBinder(unittest.TestCase):
     def test_compile(self):
         shutil.rmtree('build', ignore_errors=True)
         os.makedirs('build')
-        output = run('cmake ../ -G Ninja'.split(), cwd='build')
+        args = []
+        if sys.platform == 'win32':
+            prefix = os.environ.get("LIBRARY_PREFIX", '')
+            args.append('-DCMAKE_SYSTEM_PREFIX_PATH=%s' % prefix)
+        output = run('cmake ../ -G Ninja'.split() + args, cwd='build')
         self.assertIn('Configuring done', output)
         self.assertIn('Generating done', output)
-        output = run('ninja install'.split(), cwd='build')
+        output = run('ninja'.split(), cwd='build')
         self.assertIn('Building', output)
         self.assertIn('Linking', output)
 
