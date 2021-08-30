@@ -7,3 +7,4 @@ dependencies:
   - python-clang
   - pybind11
   - cmake
+  - ninja
