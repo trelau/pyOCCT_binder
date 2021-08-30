@@ -17,9 +17,23 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+import os
+import sys
+import shutil
 import unittest
+import subprocess
 
 from pybinder.core import Generator
+
+
+def run(*args, **kwargs):
+    """
+    Run a command and print the output
+    """
+    output = subprocess.check_output(*args, **kwargs).decode()
+    for line in output.split('\n'):
+        print(line)
+    return output
 
 
 class TestBinder(unittest.TestCase):
@@ -33,9 +47,10 @@ class TestBinder(unittest.TestCase):
         Set up the tests by parsing the header.
         """
         available_mods = {'Test'}
-        inc = './include/'
+        all_includes = os.listdir('./include/')
+        main_includes = ['./include/']
         output_path = './output'
-        gen = Generator(available_mods, inc)
+        gen = Generator('Test', {'Test': available_mods}, all_includes, main_includes)
         gen.process_config('config.txt')
         gen.parse('all_includes.h')
         gen.dump_diagnostics(1)
@@ -53,6 +68,21 @@ class TestBinder(unittest.TestCase):
                 with open(f'expected/{filename}') as f2:
                     for l1, l2 in zip(f1, f2):
                         self.assertEqual(l1, l2)
+
+    def test_compile(self):
+        shutil.rmtree('build', ignore_errors=True)
+        os.makedirs('build')
+        args = []
+        if sys.platform == 'win32':
+            prefix = os.environ.get("LIBRARY_PREFIX", '')
+            args.append('-DCMAKE_SYSTEM_PREFIX_PATH=%s' % prefix)
+            print(args)
+        output = run('cmake ../ -G Ninja'.split() + args, cwd='build')
+        self.assertIn('Configuring done', output)
+        self.assertIn('Generating done', output)
+        output = run('ninja'.split(), cwd='build')
+        self.assertIn('Building', output)
+        self.assertIn('Linking', output)
 
 
 if __name__ == '__main__':

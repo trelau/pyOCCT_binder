@@ -9,6 +9,13 @@ docs/build/
 __pycache__/
 *.py[co]
 
+# Kdevelop
+.kdev4/
+*.kdev4
+
+*.egg-info
+
 generate/
 test/output/
+test/build/
 log.txt

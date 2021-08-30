@@ -4,6 +4,7 @@ class Test_Template
 {
 public:
 
-    Test_Template<T>();
+    Test_Template<T, K>();
 
 };
+

@@ -95,7 +95,9 @@ class Generator(object):
     package_name = 'OCCT'
 
     available_mods = set()
+    namespace = dict()
     available_incs = set()
+    common_includes = set()
     available_templates = set()
     excluded_classes = set()
     excluded_functions = set()
@@ -118,6 +120,7 @@ class Generator(object):
     python_names = dict()
     excluded_imports = dict()
     call_guards = dict()
+    keep_alive = dict()
     before_type = dict()
     after_type = dict()
     patches = dict()
@@ -125,11 +128,12 @@ class Generator(object):
 
     _mods = OrderedDict()
 
-    def __init__(self, available_mods, occt_include_dir, *includes):
+    def __init__(self, package_name, namespace, all_includes, main_includes):
+        self.package_name = package_name
         self._indx = Index.create()
 
         # Primary include directories
-        self._main_includes = [occt_include_dir] + list(includes)
+        self._main_includes = list(main_includes)
 
         # Include directories
         self.include_dirs = []
@@ -145,9 +149,10 @@ class Generator(object):
         self._tu_binder = None
 
         # Build available include files
-        occt_incs = os.listdir(occt_include_dir)
-        Generator.available_incs = frozenset(occt_incs)
-        Generator.available_mods = frozenset(available_mods)
+        Generator.namespace = namespace
+        Generator.common_includes = set([f'py{package_name}_Common.hxx'])
+        Generator.available_incs = frozenset(all_includes)
+        Generator.available_mods = frozenset(namespace[package_name])
 
         # Turn on/off binding of certain declarations for debugging
         self.bind_enums = True
@@ -380,6 +385,14 @@ class Generator(object):
                         self.call_guards[qname].append(txt)
                     else:
                         self.call_guards[qname] = [txt]
+                    continue
+
+                # Keep alive
+                if line.startswith('+keep_alive'):
+                    line = line.replace('+keep_alive', '')
+                    line = line.strip()
+                    qname, params = line.split('-->', 1)
+                    self.keep_alive[qname.strip()] = params.strip()
                     continue
 
                 # Nested classes
@@ -625,6 +638,10 @@ class Generator(object):
                 logger.write(msg)
                 continue
 
+            # Check for anon/untagged enum
+            if not qname and binder.is_enum:
+                qname = binder.type.spelling
+
             if not qname:
                 msg = '\tNo qualified name. Skipping {}.\n'.format(
                     binder.type.spelling
@@ -735,7 +752,7 @@ class Generator(object):
                     continue
 
                 # Check available
-                if other_name not in Generator.available_mods:
+                if Generator.get_namespace(other_name) is None:
                     continue
 
                 # Don't add this module
@@ -770,6 +787,8 @@ class Generator(object):
         """
         logger.write('Binding types...\n')
         for mod in self.modules:
+            if mod.is_excluded:
+                continue
             mod.bind(path)
         logger.write('done.\n\n')
 
@@ -825,6 +844,18 @@ class Generator(object):
             mod = Module(name)
             cls._mods[name] = mod
             return mod
+
+    @classmethod
+    def get_namespace(cls, name):
+        """
+        Get the namespace of a module
+        :param str name: Module name.
+        :return: The module namespace name or None.
+        :rtype: str
+        """
+        for namespace, mods in cls.namespace.items():
+            if name in mods:
+                return namespace
 
 
 class Module(object):
@@ -945,7 +976,7 @@ class Module(object):
         Build list of include files for the module.
         :return: None.
         """
-        self.includes = ['pyOCCT_Common.hxx']
+        self.includes = list(Generator.common_includes)
 
         # Excluded headers per module
         minus_headers = set()
@@ -993,6 +1024,8 @@ class Module(object):
             if mod_name == other.name:
                 return True
             mod = Generator.get_module(mod_name)
+            if mod is None:
+                return False  # External namespace
             stack = list(mod.imports) + stack
         return False
 
@@ -1004,6 +1037,10 @@ class Module(object):
         :rtype: bool
         """
         return self.is_dependent(other) and other.is_dependent(self)
+
+    @property
+    def is_excluded(self):
+        return self.name in Generator.excluded_mods
 
     def bind_templates(self, path):
         """
@@ -1074,16 +1111,18 @@ class Module(object):
             if mod_name in guarded:
                 continue
             if mod_name != self.name:
+                package_name = Generator.get_namespace(mod_name)
                 fout.write('py::module::import(\"{}.{}\");\n'.format(
-                    Generator.package_name, mod_name))
+                    package_name, mod_name))
         fout.write('\n')
 
         # Import guards
         for mod_name in guarded:
+            package_name = Generator.get_namespace(mod_name)
             fout.write('struct Import{}{{\n'.format(mod_name))
             fout.write(
                 '\tImport{}() {{ py::module::import(\"{}.{}\"); }}\n'.format(
-                    mod_name, Generator.package_name, mod_name))
+                    mod_name, package_name, mod_name))
             fout.write('};\n\n')
 
         # Main bind loop
@@ -1717,6 +1756,37 @@ class CursorBinder(object):
         :rtype: list(binder.core.CursorBinder)
         """
         return self.get_children_of_kind(CursorKind.PARM_DECL)
+
+    @property
+    def parameter_signature(self):
+        """
+        Return the text of the parameter excluding the name
+        :return: The parameter spelling
+        :rtype: str
+
+        """
+        if not self.is_param:
+            return ''
+        tokens = [t.spelling for t in self.cursor.get_tokens()]
+        if len(tokens) < 2:
+            return ''
+
+        # Strip off default argument
+        if '=' in tokens:
+            tokens = tokens[:tokens.index('=')]
+
+        # Strip off paramter name
+        tokens = tokens[:-1]
+
+        # Since whitespace is stripped re-add space after const and before &
+        for i, token in enumerate(tokens):
+            if token == 'const':
+                tokens[i] = 'const '
+            elif token == '&':
+                tokens[i] = ' &'
+            elif token == '*':
+                tokens[i] = ' *'
+        return ''.join(tokens)
 
     @property
     def default_value(self):
@@ -2665,13 +2735,16 @@ def generate_method(binder):
     if qname in Generator.return_policies:
         return_policy = ', py::return_value_policy::{}'.format(Generator.return_policies[qname])
 
+    keep_alive = ''
+    if qname in Generator.keep_alive:
+        keep_alive = ', py::keep_alive<{}>()'.format(Generator.keep_alive[qname])
+
     # Call guards
     cguards = ''
     if qname in Generator.call_guards:
         cguards = ', ' + ', '.join(Generator.call_guards[qname])
 
     needs_inout = binder.needs_inout_method
-
     for i in range(nargs - ndefaults, nargs + 1):
         if needs_inout:
             txt = generate_immutable_inout_method(binder, qname)
@@ -2689,6 +2762,13 @@ def generate_method(binder):
             names = args_name[0:i]
             types = args_type[0:i]
 
+            # Keep std type signatures
+            parameters = binder.parameters
+            for j in range(nargs):
+                sig = parameters[j].parameter_signature
+                if 'std::' in sig:
+                    types[j] = sig
+
             signature = ', '.join(types)
 
             py_args = []
@@ -2696,16 +2776,22 @@ def generate_method(binder):
                 py_args.append(', py::arg(\"{}\")'.format(name))
             py_args = ''.join(py_args)
 
-            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{}{});\n'.format(
+            src = '{}.def{}(\"{}\", ({} ({})({}){}) &{}, {}\"{}\"{}{}{}{});\n'.format(
                 prefix, is_static,
                 fname, rtype, ptr,
                 signature, is_const,
                 qname, is_operator,
-                docs, py_args, return_policy, cguards)
+                docs, py_args, return_policy, keep_alive, cguards)
         else:
             arg_list = []
             args_spelling = []
+            parameters = binder.parameters
             for j in range(0, i):
+                # Keep std type signatures
+                sig = parameters[j].parameter_signature
+                if 'std::' in sig:
+                    args_type[j] = sig
+
                 arg_list.append(args_type[j])
                 args_spelling.append(args_name[j])
 

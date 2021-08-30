@@ -19,10 +19,22 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#include <pyOCCT_Common.hxx>
+#include <pyTest_Common.hxx>
+#include <Test_Enum.h>
 #include <Test_Class.h>
+#include <Test_Params.h>
 
 PYBIND11_MODULE(Test, mod) {
+
+
+// ENUM: 
+py::enum_<TaggedEnum>(mod, "TaggedEnum", "None")
+	.value("TaggedEnum_A", TaggedEnum::TaggedEnum_A)
+	.value("TaggedEnum_B", TaggedEnum::TaggedEnum_B)
+	.export_values();
+
+mod.attr("UnTaggedEnum_A") = py::cast(int(UnTaggedEnum_A));
+mod.attr("UnTaggedEnum_B") = py::cast(int(UnTaggedEnum_B));
 
 
 // CLASS: TEST_SIMPLECLASS
@@ -43,6 +55,26 @@ cls_Test_SimpleClass.def("TestReturnPolicy3", (int & (Test_SimpleClass::*)()) &T
 // After type
 // Testing +after_type line 1
 // Testing +after_type line 2
+
+// TYPEDEF: TAGGEDENUM
+
+// TYPEDEF: UNTAGGEDENUM
+
+// CLASS: TEST_ITEM
+py::class_<Test_Item> cls_Test_Item(mod, "Test_Item", "None");
+
+// Constructors
+cls_Test_Item.def(py::init<>());
+
+// CLASS: TEST_PARAMS
+py::class_<Test_Params> cls_Test_Params(mod, "Test_Params", "None");
+
+// Constructors
+cls_Test_Params.def(py::init<>());
+
+// Methods
+cls_Test_Params.def("AddItems", (void (Test_Params::*)(const std::vector<const Test_Item *> &) const) &Test_Params::AddItems, "None", py::arg("items"));
+cls_Test_Params.def("AddItems", (void (Test_Params::*)(const std::vector<const Test_Item *> &, const std::vector<int> &) const) &Test_Params::AddItems, "None", py::arg("items"), py::arg("indices"));
 
 
 }
