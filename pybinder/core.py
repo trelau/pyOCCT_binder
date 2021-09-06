@@ -625,6 +625,10 @@ class Generator(object):
                 logger.write(msg)
                 continue
 
+            # Check for anon/untagged enum
+            if not qname and binder.is_enum:
+                qname = binder.type.spelling
+
             if not qname:
                 msg = '\tNo qualified name. Skipping {}.\n'.format(
                     binder.type.spelling
