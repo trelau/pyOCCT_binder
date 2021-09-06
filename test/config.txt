@@ -20,3 +20,6 @@
 # After type
 +after_type Test_SimpleClass-->// Testing +after_type line 1
 +after_type Test_SimpleClass-->// Testing +after_type line 2
+
+# Keep alive
++keep_alive Test_Mesh::AddNode-->1, 2

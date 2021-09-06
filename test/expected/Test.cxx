@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <pyOCCT_Common.hxx>
 #include <Test_Enum.h>
 #include <Test_Class.h>
+#include <Test_KeepAlive.h>
 
 PYBIND11_MODULE(Test, mod) {
 
@@ -58,6 +59,21 @@ cls_Test_SimpleClass.def("TestReturnPolicy3", (int & (Test_SimpleClass::*)()) &T
 // TYPEDEF: TAGGEDENUM
 
 // TYPEDEF: UNTAGGEDENUM
+
+// CLASS: TEST_NODE
+py::class_<Test_Node> cls_Test_Node(mod, "Test_Node", "None");
+
+// Constructors
+cls_Test_Node.def(py::init<>());
+
+// CLASS: TEST_MESH
+py::class_<Test_Mesh> cls_Test_Mesh(mod, "Test_Mesh", "None");
+
+// Constructors
+cls_Test_Mesh.def(py::init<>());
+
+// Methods
+cls_Test_Mesh.def("AddNode", (void (Test_Mesh::*)(const int, Test_Node *)) &Test_Mesh::AddNode, "None", py::arg("id"), py::arg("node"), py::keep_alive<1, 2>());
 
 
 }
