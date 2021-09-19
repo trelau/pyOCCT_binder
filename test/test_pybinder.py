@@ -32,7 +32,7 @@ class TestBinder(unittest.TestCase):
         """
         Set up the tests by parsing the header.
         """
-        available_mods = {'Test'}
+        available_mods = {'Test', 'TestSplit'}
         inc = './include/'
         output_path = './output'
         gen = Generator(available_mods, inc)
@@ -49,6 +49,13 @@ class TestBinder(unittest.TestCase):
 
     def test_compare_output(self):
         for filename in ('Test.cxx', 'bind_Test_Template.hxx'):
+            with open(f'output/{filename}') as f1:
+                with open(f'expected/{filename}') as f2:
+                    for l1, l2 in zip(f1, f2):
+                        self.assertEqual(l1, l2)
+
+    def test_compare_split(self):
+        for filename in ('TestSplit.cxx', 'TestSplit_2.cxx'):
             with open(f'output/{filename}') as f1:
                 with open(f'expected/{filename}') as f2:
                     for l1, l2 in zip(f1, f2):

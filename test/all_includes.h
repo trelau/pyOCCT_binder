@@ -2,3 +2,4 @@
 #include <Test_Enum.h>
 #include <Test_KeepAlive.h>
 #include <Test_Template.h>
+#include <TestSplit_Module.h>
