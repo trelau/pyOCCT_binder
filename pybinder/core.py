@@ -2242,6 +2242,7 @@ def bind_class_template(binder, path):
     fout = open(fname, 'w')
     fout.write(SRC_PREFIX)
     fout.writelines(src)
+    fout.close()
 
 
 def generate_enum(binder):
