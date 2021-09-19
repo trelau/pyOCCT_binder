@@ -23,3 +23,6 @@
 
 # Keep alive
 +keep_alive Test_Mesh::AddNode-->1, 2
+
+# Split modules
++split TestSplit

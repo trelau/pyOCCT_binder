@@ -110,6 +110,7 @@ class Generator(object):
     downcast_classes = set()
     skipped = set()
     immutable = set()
+    split = set()
 
     excluded_bases = dict()
     import_guards = dict()
@@ -442,6 +443,13 @@ class Generator(object):
                     line = line.replace('+immutable', '')
                     line = line.strip()
                     self.immutable.add(line)
+                    continue
+
+                # Split modules
+                if line.startswith('+split'):
+                    line = line.replace('+split', '')
+                    line = line.strip()
+                    self.split.add(line)
                     continue
 
                 # Replace text in file
@@ -1044,6 +1052,9 @@ class Module(object):
             os.makedirs(path)
         fname = '/'.join([path, self.name + '.cxx'])
 
+        # Check if module is split
+        is_split = self.name in Generator.split
+
         fout = open(fname, 'w')
 
         # File header
@@ -1059,11 +1070,14 @@ class Module(object):
 
         # Write include files
         used_includes = set()
+        inc_src = []
         for inc in self.includes + extra_headers:
             if inc in used_includes:
                 continue
             used_includes.add(inc)
-            fout.write('#include <{}>\n'.format(inc))
+            line = '#include <{}>\n'.format(inc)
+            fout.write(line)
+            inc_src.append(line)
         fout.write('\n')
 
         # Write opaque types
@@ -1074,6 +1088,11 @@ class Module(object):
                 fout.write(opaque)
         if has_opaque:
             fout.write('\n')
+
+        # Write split function signature
+        if is_split:
+            fout.write('// Functions for split modules\n')
+            fout.write('void bind_{}_2(py::module&);\n\n'.format(self.name))
 
         # Initialize
         fout.write('PYBIND11_MODULE({}, mod) {{\n\n'.format(self.name))
@@ -1099,6 +1118,12 @@ class Module(object):
                     mod_name, Generator.package_name, mod_name))
             fout.write('};\n\n')
 
+        # If the module is split in two, only bind half and save the rest for another file
+        split_binders = []
+        if is_split:
+            indx = len(binders) // 2
+            binders, split_binders = binders[:indx], binders[indx:]
+
         # Main bind loop
         src = []
         for binder in binders:
@@ -1113,9 +1138,49 @@ class Module(object):
             fout.write(line)
         fout.write('\n')
 
+        # Call the split function
+        if is_split:
+            line = 'bind_{}_2(mod);\n\n'.format(self.name)
+            fout.write(line)
+
         # End module
         fout.write('}\n')
         fout.close()
+
+        # Create the split file
+        if is_split:
+            fname = '/'.join([path, self.name + '_2.cxx'])
+            fout = open(fname, 'w')
+
+            # File header
+            fout.write(SRC_PREFIX)
+
+            # Duplicate all the include files for now
+            fout.writelines(inc_src)
+            fout.write('\n')
+
+            # Function signature
+            line = 'void bind_{}_2(py::module &mod)\n'.format(self.name)
+            fout.write(line)
+            fout.write('{\n\n')
+
+            # Main bind loop
+            src = []
+            for binder in split_binders:
+                src.extend(binder.src)
+
+            # Patch the split file
+            # TODO: Line Number is off
+            patch_src(self.name, src)
+
+            # Write it out
+            for line in src:
+                fout.write(line)
+            fout.write('\n')
+
+            # End module
+            fout.write('}\n')
+            fout.close()
 
 
 class CursorBinder(object):
