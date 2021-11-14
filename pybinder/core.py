@@ -124,6 +124,7 @@ class Generator(object):
     after_type = dict()
     patches = dict()
     return_policies = dict()
+    before_module = dict()
 
     _mods = OrderedDict()
 
@@ -412,7 +413,7 @@ class Generator(object):
                     self.skipped.add(line)
                     continue
 
-                # Manual text
+                # Manual text before a type
                 if line.startswith('+before_type'):
                     line = line.replace('+before_type', '', 1)
                     line = line.strip()
@@ -425,7 +426,7 @@ class Generator(object):
                         self.before_type[qname] = [txt]
                     continue
 
-                # Extra text
+                # Extra text after a type
                 if line.startswith('+after_type'):
                     line = line.replace('+after_type', '', 1)
                     line = line.strip()
@@ -463,6 +464,19 @@ class Generator(object):
                         self.patches[qname].append(pair)
                     else:
                         self.patches[qname] = [pair]
+                    continue
+
+                # Manual text before a module
+                if line.startswith('+before_module'):
+                    line = line.replace('+before_module', '', 1)
+                    line = line.strip()
+                    mod, txt = line.split('-->', 1)
+                    mod = mod.strip()
+                    txt = txt.strip()
+                    if mod in self.before_module:
+                        self.before_module[mod].append(txt)
+                    else:
+                        self.before_module[mod] = [txt]
                     continue
 
     def parse(self, file_):
@@ -1093,6 +1107,12 @@ class Module(object):
         if is_split:
             fout.write('// Functions for split modules\n')
             fout.write('void bind_{}_2(py::module&);\n\n'.format(self.name))
+
+        # Write manual text before module
+        if self.name in Generator.before_module:
+            for txt in Generator.before_module[self.name]:
+                fout.write('{}\n'.format(txt))
+            fout.write('\n')
 
         # Initialize
         fout.write('PYBIND11_MODULE({}, mod) {{\n\n'.format(self.name))
