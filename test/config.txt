@@ -21,6 +21,9 @@
 +after_type Test_SimpleClass-->// Testing +after_type line 1
 +after_type Test_SimpleClass-->// Testing +after_type line 2
 
++before_module Test-->// Testing +before_module line 1
++before_module Test-->// Testing +before_module line 2
+
 # Keep alive
 +keep_alive Test_Mesh::AddNode-->1, 2
 

@@ -24,6 +24,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <Test_Class.h>
 #include <Test_KeepAlive.h>
 
+// Testing +before_module line 1
+// Testing +before_module line 2
+
 PYBIND11_MODULE(Test, mod) {
 
 
