@@ -191,293 +191,297 @@ class Generator(object):
         """
         logger.write('Processing configuration file: {}.\n'.format(fn))
         with open(fn, 'r') as f:
-            for line in f:
-                line = line.strip()
-
-                # Line comment
-                if line.startswith('#'):
-                    continue
-
-                # Include directory
-                if line.startswith('+include'):
-                    line = line.replace('+include', '')
+            for line_number, line in enumerate(f):
+                try:
                     line = line.strip()
-                    self.include_dirs.append(line)
-                    continue
 
-                # Compiler argument
-                if line.startswith('+arg'):
-                    line = line.replace('+arg', '')
-                    line = line.strip()
-                    platform, arg = line.split(':')
-                    platform = platform.strip()
-                    arg = arg.strip()
-                    if platform in self.compiler_args:
-                        self.compiler_args[platform].append(arg)
-                    else:
-                        self.compiler_args[platform] = [arg]
-                    continue
+                    # Line comment
+                    if line.startswith('#'):
+                        continue
 
-                # Sort order
-                if line.startswith('+sort'):
-                    line = line.replace('+sort', '')
-                    line = line.strip()
-                    mod, loc = line.split(':')
-                    mod = mod.strip()
-                    loc = loc.strip()
-                    self._sort[mod] = int(loc)
-                    continue
+                    # Include directory
+                    if line.startswith('+include'):
+                        line = line.replace('+include', '')
+                        line = line.strip()
+                        self.include_dirs.append(line)
+                        continue
 
-                # Excluded header
-                if line.startswith('-header*'):
-                    line = line.replace('-header*', '')
-                    line = line.strip()
-                    self.excluded_headers.add(line)
-                    continue
+                    # Compiler argument
+                    if line.startswith('+arg'):
+                        line = line.replace('+arg', '')
+                        line = line.strip()
+                        platform, arg = line.split(':')
+                        platform = platform.strip()
+                        arg = arg.strip()
+                        if platform in self.compiler_args:
+                            self.compiler_args[platform].append(arg)
+                        else:
+                            self.compiler_args[platform] = [arg]
+                        continue
 
-                # Excluded classes
-                if line.startswith('-class'):
-                    line = line.replace('-class', '')
-                    line = line.strip()
-                    self.excluded_classes.add(line)
-                    continue
+                    # Sort order
+                    if line.startswith('+sort'):
+                        line = line.replace('+sort', '')
+                        line = line.strip()
+                        mod, loc = line.split(':')
+                        mod = mod.strip()
+                        loc = loc.strip()
+                        self._sort[mod] = int(loc)
+                        continue
 
-                # Excluded typedefs
-                if line.startswith('-typedef'):
-                    line = line.replace('-typedef', '')
-                    line = line.strip()
-                    self.excluded_typedefs.add(line)
-                    continue
+                    # Excluded header
+                    if line.startswith('-header*'):
+                        line = line.replace('-header*', '')
+                        line = line.strip()
+                        self.excluded_headers.add(line)
+                        continue
 
-                # Excluded functions
-                if line.startswith('-function*'):
-                    line = line.replace('-function*', '')
-                    line = line.strip()
-                    self.excluded_fnames.add(line)
-                    continue
+                    # Excluded classes
+                    if line.startswith('-class'):
+                        line = line.replace('-class', '')
+                        line = line.strip()
+                        self.excluded_classes.add(line)
+                        continue
 
-                if line.startswith('-function'):
-                    line = line.replace('-function', '')
-                    line = line.strip()
-                    self.excluded_functions.add(line)
-                    continue
+                    # Excluded typedefs
+                    if line.startswith('-typedef'):
+                        line = line.replace('-typedef', '')
+                        line = line.strip()
+                        self.excluded_typedefs.add(line)
+                        continue
 
-                # Excluded enums
-                if line.startswith('-enum'):
-                    line = line.replace('-enum', '')
-                    line = line.strip()
-                    self.excluded_enums.add(line)
-                    continue
+                    # Excluded functions
+                    if line.startswith('-function*'):
+                        line = line.replace('-function*', '')
+                        line = line.strip()
+                        self.excluded_fnames.add(line)
+                        continue
 
-                # Excluded modules
-                if line.startswith('-module'):
-                    line = line.replace('-module', '')
-                    line = line.strip()
-                    self.excluded_mods.add(line)
-                    continue
+                    if line.startswith('-function'):
+                        line = line.replace('-function', '')
+                        line = line.strip()
+                        self.excluded_functions.add(line)
+                        continue
 
-                # Import guards
-                if line.startswith('+iguard'):
-                    line = line.replace('+iguard', '')
-                    line = line.strip()
-                    mod, other = line.split(':')
-                    mod = mod.strip()
-                    other = other.strip()
-                    if mod in self.import_guards:
-                        self.import_guards[mod].add(other)
-                    else:
-                        self.import_guards[mod] = {other}
-                    continue
+                    # Excluded enums
+                    if line.startswith('-enum'):
+                        line = line.replace('-enum', '')
+                        line = line.strip()
+                        self.excluded_enums.add(line)
+                        continue
 
-                # Plus headers
-                if line.startswith('+header'):
-                    line = line.replace('+header', '')
-                    line = line.strip()
-                    mod, header = line.split(':')
-                    mod = mod.strip()
-                    header = header.strip()
-                    if mod in self.plus_headers:
-                        self.plus_headers[mod].append(header)
-                    else:
-                        self.plus_headers[mod] = [header]
-                    continue
+                    # Excluded modules
+                    if line.startswith('-module'):
+                        line = line.replace('-module', '')
+                        line = line.strip()
+                        self.excluded_mods.add(line)
+                        continue
 
-                # Minus headers
-                if line.startswith('-header'):
-                    line = line.replace('-header', '')
-                    line = line.strip()
-                    mod, header = line.split(':')
-                    mod = mod.strip()
-                    header = header.strip()
-                    if mod in self.minus_headers:
-                        self.minus_headers[mod].append(header)
-                    else:
-                        self.minus_headers[mod] = [header]
-                    continue
+                    # Import guards
+                    if line.startswith('+iguard'):
+                        line = line.replace('+iguard', '')
+                        line = line.strip()
+                        mod, other = line.split(':')
+                        mod = mod.strip()
+                        other = other.strip()
+                        if mod in self.import_guards:
+                            self.import_guards[mod].add(other)
+                        else:
+                            self.import_guards[mod] = {other}
+                        continue
 
-                # Python names
-                if line.startswith('+pname'):
-                    line = line.replace('+pname', '')
-                    line = line.strip()
-                    type_, name = line.split('-->', 1)
-                    type_ = type_.strip()
-                    name = name.strip()
-                    self.python_names[type_] = name
-                    continue
+                    # Plus headers
+                    if line.startswith('+header'):
+                        line = line.replace('+header', '')
+                        line = line.strip()
+                        mod, header = line.split(':')
+                        mod = mod.strip()
+                        header = header.strip()
+                        if mod in self.plus_headers:
+                            self.plus_headers[mod].append(header)
+                        else:
+                            self.plus_headers[mod] = [header]
+                        continue
 
-                # nodelete
-                if line.startswith('+nodelete'):
-                    line = line.replace('+nodelete', '')
-                    line = line.strip()
-                    self.nodelete.add(line)
-                    continue
+                    # Minus headers
+                    if line.startswith('-header'):
+                        line = line.replace('-header', '')
+                        line = line.strip()
+                        mod, header = line.split(':')
+                        mod = mod.strip()
+                        header = header.strip()
+                        if mod in self.minus_headers:
+                            self.minus_headers[mod].append(header)
+                        else:
+                            self.minus_headers[mod] = [header]
+                        continue
 
-                # Excluded bases
-                if line.startswith('-base'):
-                    line = line.replace('-base', '')
-                    line = line.strip()
-                    qname, base = line.split(':', 1)
-                    qname = qname.strip()
-                    base = base.strip()
-                    if qname in self.excluded_bases:
-                        self.excluded_bases[qname].append(base)
-                    else:
-                        self.excluded_bases[qname] = [base]
-                    continue
+                    # Python names
+                    if line.startswith('+pname'):
+                        line = line.replace('+pname', '')
+                        line = line.strip()
+                        type_, name = line.split('-->', 1)
+                        type_ = type_.strip()
+                        name = name.strip()
+                        self.python_names[type_] = name
+                        continue
 
-                # Excluded fields
-                if line.startswith('-field'):
-                    line = line.replace('-field', '')
-                    line = line.strip()
-                    self.excluded_fields.add(line)
-                    continue
+                    # nodelete
+                    if line.startswith('+nodelete'):
+                        line = line.replace('+nodelete', '')
+                        line = line.strip()
+                        self.nodelete.add(line)
+                        continue
 
-                # Excluded imports
-                if line.startswith('-import'):
-                    line = line.replace('-import', '')
-                    line = line.strip()
-                    mod1, mod2 = line.split(':', 1)
-                    mod1 = mod1.strip()
-                    mod2 = mod2.strip()
-                    if mod1 in self.excluded_imports:
-                        self.excluded_imports[mod1].append(mod2)
-                    else:
-                        self.excluded_imports[mod1] = [mod2]
-                    continue
+                    # Excluded bases
+                    if line.startswith('-base'):
+                        line = line.replace('-base', '')
+                        line = line.strip()
+                        qname, base = line.split(':', 1)
+                        qname = qname.strip()
+                        base = base.strip()
+                        if qname in self.excluded_bases:
+                            self.excluded_bases[qname].append(base)
+                        else:
+                            self.excluded_bases[qname] = [base]
+                        continue
 
-                # Return policies
-                if line.startswith('+return_policy'):
-                    line = line.replace('+return_policy', '').strip()
-                    qname, policy = map(str.strip, line.split('-->', 1))
-                    self.return_policies[qname] = policy
+                    # Excluded fields
+                    if line.startswith('-field'):
+                        line = line.replace('-field', '')
+                        line = line.strip()
+                        self.excluded_fields.add(line)
+                        continue
 
-                # Call guards
-                if line.startswith('+cguard'):
-                    line = line.replace('+cguard', '')
-                    line = line.strip()
-                    qname, mod = line.split('-->', 1)
-                    qname = qname.strip()
-                    mod = mod.strip()
-                    txt = 'py::call_guard<Import{}>()'.format(mod)
-                    if qname in self.call_guards:
-                        self.call_guards[qname].append(txt)
-                    else:
-                        self.call_guards[qname] = [txt]
-                    continue
+                    # Excluded imports
+                    if line.startswith('-import'):
+                        line = line.replace('-import', '')
+                        line = line.strip()
+                        mod1, mod2 = line.split(':', 1)
+                        mod1 = mod1.strip()
+                        mod2 = mod2.strip()
+                        if mod1 in self.excluded_imports:
+                            self.excluded_imports[mod1].append(mod2)
+                        else:
+                            self.excluded_imports[mod1] = [mod2]
+                        continue
 
-                # Keep alive
-                if line.startswith('+keep_alive'):
-                    line = line.replace('+keep_alive', '')
-                    line = line.strip()
-                    qname, params = line.split('-->', 1)
-                    self.keep_alive[qname.strip()] = params.strip()
-                    continue
+                    # Return policies
+                    if line.startswith('+return_policy'):
+                        line = line.replace('+return_policy', '').strip()
+                        qname, policy = map(str.strip, line.split('-->', 1))
+                        self.return_policies[qname] = policy
 
-                # Nested classes
-                if line.startswith('+nested'):
-                    line = line.replace('+nested', '')
-                    line = line.strip()
-                    self.nested_classes.add(line)
-                    continue
+                    # Call guards
+                    if line.startswith('+cguard'):
+                        line = line.replace('+cguard', '')
+                        line = line.strip()
+                        qname, mod = line.split('-->', 1)
+                        qname = qname.strip()
+                        mod = mod.strip()
+                        txt = 'py::call_guard<Import{}>()'.format(mod)
+                        if qname in self.call_guards:
+                            self.call_guards[qname].append(txt)
+                        else:
+                            self.call_guards[qname] = [txt]
+                        continue
 
-                if line.startswith('+downcast'):
-                    line = line.replace('+downcast', '')
-                    line = line.strip()
-                    self.downcast_classes.add(line)
-                    continue
+                    # Keep alive
+                    if line.startswith('+keep_alive'):
+                        line = line.replace('+keep_alive', '')
+                        line = line.strip()
+                        qname, params = line.split('-->', 1)
+                        self.keep_alive[qname.strip()] = params.strip()
+                        continue
 
-                # Skipped binders
-                if line.startswith('+skip'):
-                    line = line.replace('+skip', '')
-                    line = line.strip()
-                    self.skipped.add(line)
-                    continue
+                    # Nested classes
+                    if line.startswith('+nested'):
+                        line = line.replace('+nested', '')
+                        line = line.strip()
+                        self.nested_classes.add(line)
+                        continue
 
-                # Manual text before a type
-                if line.startswith('+before_type'):
-                    line = line.replace('+before_type', '', 1)
-                    line = line.strip()
-                    qname, txt = line.split('-->', 1)
-                    qname = qname.strip()
-                    txt = txt.strip()
-                    if qname in self.before_type:
-                        self.before_type[qname].append(txt)
-                    else:
-                        self.before_type[qname] = [txt]
-                    continue
+                    if line.startswith('+downcast'):
+                        line = line.replace('+downcast', '')
+                        line = line.strip()
+                        self.downcast_classes.add(line)
+                        continue
 
-                # Extra text after a type
-                if line.startswith('+after_type'):
-                    line = line.replace('+after_type', '', 1)
-                    line = line.strip()
-                    qname, txt = line.split('-->', 1)
-                    qname = qname.strip()
-                    txt = txt.strip()
-                    if qname in self.after_type:
-                        self.after_type[qname].append(txt)
-                    else:
-                        self.after_type[qname] = [txt]
-                    continue
+                    # Skipped binders
+                    if line.startswith('+skip'):
+                        line = line.replace('+skip', '')
+                        line = line.strip()
+                        self.skipped.add(line)
+                        continue
 
-                # Immutable types
-                if line.startswith('+immutable'):
-                    line = line.replace('+immutable', '')
-                    line = line.strip()
-                    self.immutable.add(line)
-                    continue
+                    # Manual text before a type
+                    if line.startswith('+before_type'):
+                        line = line.replace('+before_type', '', 1)
+                        line = line.strip()
+                        qname, txt = line.split('-->', 1)
+                        qname = qname.strip()
+                        txt = txt.strip()
+                        if qname in self.before_type:
+                            self.before_type[qname].append(txt)
+                        else:
+                            self.before_type[qname] = [txt]
+                        continue
 
-                # Split modules
-                if line.startswith('+split'):
-                    line = line.replace('+split', '')
-                    line = line.strip()
-                    self.split.add(line)
-                    continue
+                    # Extra text after a type
+                    if line.startswith('+after_type'):
+                        line = line.replace('+after_type', '', 1)
+                        line = line.strip()
+                        qname, txt = line.split('-->', 1)
+                        qname = qname.strip()
+                        txt = txt.strip()
+                        if qname in self.after_type:
+                            self.after_type[qname].append(txt)
+                        else:
+                            self.after_type[qname] = [txt]
+                        continue
 
-                # Replace text in file
-                if line.startswith('+patch'):
-                    line = line.replace('+patch', '')
-                    line = line.strip()
-                    qname, txt = line.split(':', 1)
-                    qname = qname.strip()
-                    pair = txt.strip().split('-->', 1)
-                    if qname in self.patches:
-                        self.patches[qname].append(pair)
-                    else:
-                        self.patches[qname] = [pair]
-                    continue
+                    # Immutable types
+                    if line.startswith('+immutable'):
+                        line = line.replace('+immutable', '')
+                        line = line.strip()
+                        self.immutable.add(line)
+                        continue
 
-                # Manual text before a module
-                if line.startswith('+before_module'):
-                    line = line.replace('+before_module', '', 1)
-                    line = line.strip()
-                    mod, txt = line.split('-->', 1)
-                    mod = mod.strip()
-                    txt = txt.strip()
-                    if mod in self.before_module:
-                        self.before_module[mod].append(txt)
-                    else:
-                        self.before_module[mod] = [txt]
-                    continue
+                    # Split modules
+                    if line.startswith('+split'):
+                        line = line.replace('+split', '')
+                        line = line.strip()
+                        self.split.add(line)
+                        continue
+
+                    # Replace text in file
+                    if line.startswith('+patch'):
+                        line = line.replace('+patch', '')
+                        line = line.strip()
+                        qname, txt = line.split(':', 1)
+                        qname = qname.strip()
+                        pair = txt.strip().split('-->', 1)
+                        if qname in self.patches:
+                            self.patches[qname].append(pair)
+                        else:
+                            self.patches[qname] = [pair]
+                        continue
+
+                    # Manual text before a module
+                    if line.startswith('+before_module'):
+                        line = line.replace('+before_module', '', 1)
+                        line = line.strip()
+                        mod, txt = line.split('-->', 1)
+                        mod = mod.strip()
+                        txt = txt.strip()
+                        if mod in self.before_module:
+                            self.before_module[mod].append(txt)
+                        else:
+                            self.before_module[mod] = [txt]
+                        continue
+                except Exception as e:
+                    i = line_number + 1
+                    raise RuntimeError(f"Error in config at line {i}: {e}")
 
     def parse(self, file_):
         """
@@ -2474,10 +2478,11 @@ def generate_class(binder):
         src.append('\n')
 
     # Source variable
+    source_name = Generator.python_names.get(qname, name)
     if binder.is_nested:
-        cls = '_'.join(['cls', binder.parent.python_name, name])
+        cls = '_'.join(['cls', binder.parent.python_name, source_name])
     else:
-        cls = '_'.join(['cls', name])
+        cls = '_'.join(['cls', source_name])
 
     # Holder
     if binder.is_transient:
