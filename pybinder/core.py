@@ -1567,6 +1567,22 @@ class CursorBinder(object):
         return False
 
     @property
+    def is_getter_method(self):
+        """
+        Check if binder is a public method that returns a reference and the
+        class has an another public method public method named "Set<name>".
+
+        :return: *True* if getter, *False* otherwise.
+        :rtype: bool
+        """
+        if self.is_cxx_method and self.is_public and self.rtype.spelling.endswith("&"):
+            setter_name = f'Set{self.spelling}'
+            for method in self.parent.methods:
+                if method.spelling == setter_name and method.is_public:
+                    return True
+        return False
+
+    @property
     def is_nested(self):
         """
         Check if binder is nested in a class, struct, or class template.
@@ -2768,6 +2784,8 @@ def generate_method(binder):
     return_policy = ''
     if qname in Generator.return_policies:
         return_policy = ', py::return_value_policy::{}'.format(Generator.return_policies[qname])
+    elif binder.is_getter_method:
+        return_policy = ', py::return_value_policy::reference_internal'
 
     keep_alive = ''
     if qname in Generator.keep_alive:
