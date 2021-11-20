@@ -24,6 +24,8 @@
 +before_module Test-->// Testing +before_module line 1
 +before_module Test-->// Testing +before_module line 2
 
++pname Test_Pname-->Test_NewName
+
 # Keep alive
 +keep_alive Test_Mesh::AddNode-->1, 2
 
