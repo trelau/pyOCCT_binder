@@ -1575,7 +1575,7 @@ class CursorBinder(object):
         :return: *True* if getter, *False* otherwise.
         :rtype: bool
         """
-        if self.is_cxx_method and self.is_public and self.rtype.spelling.endswith("&"):
+        if self.is_cxx_method and self.is_public and self.rtype.is_lvalue:
             setter_name = f'Set{self.spelling}'
             for method in self.parent.methods:
                 if method.spelling == setter_name and method.is_public:
