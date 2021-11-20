@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <pyOCCT_Common.hxx>
 #include <Test_Enum.h>
 #include <Test_Class.h>
+#include <Test_Getter.h>
 #include <Test_KeepAlive.h>
 #include <Test_Pname.h>
 
@@ -63,6 +64,17 @@ cls_Test_SimpleClass.def("TestReturnPolicy3", (int & (Test_SimpleClass::*)()) &T
 // TYPEDEF: TAGGEDENUM
 
 // TYPEDEF: UNTAGGEDENUM
+
+// CLASS: TEST_GETTER
+py::class_<Test_Getter> cls_Test_Getter(mod, "Test_Getter", "None");
+
+// Constructors
+cls_Test_Getter.def(py::init<>());
+
+// Methods
+cls_Test_Getter.def("OtherValue", (int & (Test_Getter::*)()) &Test_Getter::OtherValue, "None");
+cls_Test_Getter.def("Value", (int & (Test_Getter::*)()) &Test_Getter::Value, "None", py::return_value_policy::reference_internal);
+cls_Test_Getter.def("SetValue", (int (Test_Getter::*)()) &Test_Getter::SetValue, "None");
 
 // CLASS: TEST_NODE
 py::class_<Test_Node> cls_Test_Node(mod, "Test_Node", "None");
