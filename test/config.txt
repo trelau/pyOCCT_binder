@@ -24,6 +24,8 @@
 +before_module Test-->// Testing +before_module line 1
 +before_module Test-->// Testing +before_module line 2
 
++before_module TestSplit--> // Testing +before_module in split module
+
 +pname Test_Pname-->Test_NewName
 
 # Keep alive

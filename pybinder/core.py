@@ -1107,16 +1107,18 @@ class Module(object):
         if has_opaque:
             fout.write('\n')
 
+        # Write manual text before module
+        before_mod_src = []
+        if self.name in Generator.before_module:
+            for txt in Generator.before_module[self.name]:
+                fout.write('{}\n'.format(txt))
+                before_mod_src.append(txt)
+            fout.write('\n')
+
         # Write split function signature
         if is_split:
             fout.write('// Functions for split modules\n')
             fout.write('void bind_{}_2(py::module&);\n\n'.format(self.name))
-
-        # Write manual text before module
-        if self.name in Generator.before_module:
-            for txt in Generator.before_module[self.name]:
-                fout.write('{}\n'.format(txt))
-            fout.write('\n')
 
         # Initialize
         fout.write('PYBIND11_MODULE({}, mod) {{\n\n'.format(self.name))
@@ -1182,6 +1184,11 @@ class Module(object):
             # Duplicate all the include files for now
             fout.writelines(inc_src)
             fout.write('\n')
+
+            # Duplicate text before module
+            if before_mod_src:
+                fout.writelines(before_mod_src)
+                fout.write('\n\n')
 
             # Function signature
             line = 'void bind_{}_2(py::module &mod)\n'.format(self.name)

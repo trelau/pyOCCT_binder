@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <pyOCCT_Common.hxx>
 #include <TestSplit_Module.h>
 
+// Testing +before_module in split module
+
 // Functions for split modules
 void bind_TestSplit_2(py::module&);
 
